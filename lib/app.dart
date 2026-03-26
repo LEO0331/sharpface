@@ -9,7 +9,7 @@ class SharpFaceApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: '男士 AI 護膚分析儀',
+      title: '護膚分析儀',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       home: const HomePage(),

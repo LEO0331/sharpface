@@ -1,22 +1,23 @@
-# 男士 AI 護膚分析儀 (SharpFace)
+# 👨‍⚕️ 男士 AI 護膚分析儀 (Men's AI Skin Care Analyzer)
 
-Flutter + Firebase + OpenAI 的男士膚質分析應用。
+這是一款專為男士設計的輕量化 AI 護膚應用程式。透過 Google Gemini / OpenAI 視覺分析技術，即時偵測膚質並提供個人化的保養建議與產品比價。
 
-## Security
+---
 
-- API Key 使用 `--dart-define` 注入，不寫死在程式碼。
-- 本專案已在 `.gitignore` 排除 `.env*`、`google-services.json`、`GoogleService-Info.plist` 等敏感檔案。
+## ✨ 核心功能
 
-## Run
+*   **AI 臉部掃描**：上傳照片即可分析膚質（油性、乾性、混合性）及主要皮膚問題。
+*   **保養指南**：根據分析結果，自動生成早晚基礎保養步驟（清潔、保濕、防曬）。
+*   **產品比價表**：即時顯示 10 件熱門護膚產品，包含成分、價格、評價及導購連結。
+*   **贊助排名**：首位顯示贊助商產品，幫助用戶快速發現優質選擇。
+*   **皮膚日誌**：追蹤歷屆臉部變化，並記錄當時使用的護膚產品（需登入）。
+*   **管理員後台**：商務數據監控（用戶數、分析次數、產品點擊率）。
 
-```bash
-flutter pub get
-flutter run --dart-define=OPENAI_API_KEY=your_openai_api_key
-```
+---
 
-## Firebase 設定2
+## 🛠️ 技術架構
 
-- 啟用 `Email/Password` 登入。
-- 啟用 `Phone` 登入（供訪客 SMS OTP 驗證）。
-- 若要測試 OTP，不發送真實簡訊可在 Firebase Console 設定：
-  `Authentication -> Sign-in method -> Phone -> Phone numbers for testing`。
+*   **Frontend**: [Flutter](https://flutter.dev) (Stable v3.41+)
+*   **Backend**: [Firebase](https://firebase.google.com) (Auth, Firestore, Storage)
+*   **AI Engine**: [Google Gemini API](https://aistudio.google.com) / [OpenAI GPT-4o-mini](https://platform.openai.com)
+*   **State Management**: [Riverpod](https://riverpod.dev)
