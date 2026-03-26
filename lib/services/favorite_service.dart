@@ -26,6 +26,9 @@ class FavoriteService {
           affiliateUrl: (data['affiliateUrl'] as String?) ?? '',
           isFeatured: (data['isFeatured'] as bool?) ?? false,
           clickCount: (data['clickCount'] as num?)?.toInt() ?? 0,
+          imageUrl: data['imageUrl'] as String?,
+          userScore: (data['userScore'] as num?)?.toDouble(),
+          reviewCount: (data['reviewCount'] as num?)?.toInt(),
         );
       }).toList();
     });
@@ -45,6 +48,9 @@ class FavoriteService {
       'affiliateUrl': product.affiliateUrl,
       'isFeatured': product.isFeatured,
       'clickCount': product.clickCount,
+      'imageUrl': product.imageUrl,
+      'userScore': product.userScore,
+      'reviewCount': product.reviewCount,
       'updatedAt': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }

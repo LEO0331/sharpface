@@ -47,7 +47,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _hasAnalyzed = false;
   bool _useFallbackTestingProducts = false;
   String? _guestPhoneForRecord;
-  String _activeAdText = '測試廣告：男士保濕與防曬入門套組。';
+  List<String> _activeAds = const ['測試廣告：男士保濕與防曬入門套組。'];
 
   final List<Product> _staticProducts = const [
     Product(
@@ -83,16 +83,16 @@ class _HomePageState extends ConsumerState<HomePage> {
   ];
 
   final List<Product> _testingProducts = const [
-    Product(id: 'test-1', name: '抗痘修護精華（測試）', price: 1090, mainIngredients: ['杜鵑花酸', 'B5'], rating: 3, affiliateUrl: 'https://example.com/test-serum-1', isFeatured: true, clickCount: 0),
-    Product(id: 'test-2', name: '溫和潔面（測試）', price: 420, mainIngredients: ['胺基酸', '甘草'], rating: 2, affiliateUrl: 'https://example.com/test-cleanser-2', isFeatured: false, clickCount: 0),
-    Product(id: 'test-3', name: '日間防曬 SPF50（測試）', price: 680, mainIngredients: ['氧化鋅', '維他命E'], rating: 2, affiliateUrl: 'https://example.com/test-sunscreen-3', isFeatured: false, clickCount: 0),
-    Product(id: 'test-4', name: '夜間修護乳（測試）', price: 780, mainIngredients: ['神經醯胺', '角鯊烷'], rating: 2, affiliateUrl: 'https://example.com/test-night-4', isFeatured: false, clickCount: 0),
-    Product(id: 'test-5', name: '控油化妝水（測試）', price: 390, mainIngredients: ['金縷梅', '鋅 PCA'], rating: 1, affiliateUrl: 'https://example.com/test-toner-5', isFeatured: false, clickCount: 0),
-    Product(id: 'test-6', name: '黑眼圈眼部精華（測試）', price: 880, mainIngredients: ['咖啡因', '維他命K'], rating: 3, affiliateUrl: 'https://example.com/test-eye-6', isFeatured: true, clickCount: 0),
-    Product(id: 'test-7', name: '敏感修護凝膠（測試）', price: 520, mainIngredients: ['積雪草', '尿囊素'], rating: 2, affiliateUrl: 'https://example.com/test-repair-7', isFeatured: false, clickCount: 0),
-    Product(id: 'test-8', name: '泥膜清潔（測試）', price: 460, mainIngredients: ['高嶺土', '鋅'], rating: 1, affiliateUrl: 'https://example.com/test-mask-8', isFeatured: false, clickCount: 0),
-    Product(id: 'test-9', name: '清爽乳液（測試）', price: 650, mainIngredients: ['玻尿酸', '維他命B3'], rating: 2, affiliateUrl: 'https://example.com/test-lotion-9', isFeatured: false, clickCount: 0),
-    Product(id: 'test-10', name: '男士修護組（測試）', price: 1290, mainIngredients: ['多胜肽', '神經醯胺'], rating: 3, affiliateUrl: 'https://example.com/test-kit-10', isFeatured: true, clickCount: 0),
+    Product(id: 'test-1', name: '抗痘修護精華（測試）', price: 1090, mainIngredients: ['杜鵑花酸', 'B5'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-serum-1', isFeatured: true, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-serum-1/320/220', userScore: 4.6, reviewCount: 182),
+    Product(id: 'test-2', name: '溫和潔面（測試）', price: 420, mainIngredients: ['胺基酸', '甘草'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-cleanser-2', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-cleanser-2/320/220', userScore: 4.3, reviewCount: 96),
+    Product(id: 'test-3', name: '日間防曬 SPF50（測試）', price: 680, mainIngredients: ['氧化鋅', '維他命E'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-sunscreen-3', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-sunscreen-3/320/220', userScore: 4.4, reviewCount: 128),
+    Product(id: 'test-4', name: '夜間修護乳（測試）', price: 780, mainIngredients: ['神經醯胺', '角鯊烷'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-night-4', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-night-4/320/220', userScore: 4.2, reviewCount: 72),
+    Product(id: 'test-5', name: '控油化妝水（測試）', price: 390, mainIngredients: ['金縷梅', '鋅 PCA'], rating: 1, affiliateUrl: 'https://shop.example.com/p/test-toner-5', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-toner-5/320/220', userScore: 4.0, reviewCount: 64),
+    Product(id: 'test-6', name: '黑眼圈眼部精華（測試）', price: 880, mainIngredients: ['咖啡因', '維他命K'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-eye-6', isFeatured: true, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-eye-6/320/220', userScore: 4.7, reviewCount: 143),
+    Product(id: 'test-7', name: '敏感修護凝膠（測試）', price: 520, mainIngredients: ['積雪草', '尿囊素'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-repair-7', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-repair-7/320/220', userScore: 4.1, reviewCount: 59),
+    Product(id: 'test-8', name: '泥膜清潔（測試）', price: 460, mainIngredients: ['高嶺土', '鋅'], rating: 1, affiliateUrl: 'https://shop.example.com/p/test-mask-8', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-mask-8/320/220', userScore: 3.9, reviewCount: 44),
+    Product(id: 'test-9', name: '清爽乳液（測試）', price: 650, mainIngredients: ['玻尿酸', '維他命B3'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-lotion-9', isFeatured: false, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-lotion-9/320/220', userScore: 4.3, reviewCount: 118),
+    Product(id: 'test-10', name: '男士修護組（測試）', price: 1290, mainIngredients: ['多胜肽', '神經醯胺'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-kit-10', isFeatured: true, clickCount: 0, imageUrl: 'https://picsum.photos/seed/test-kit-10/320/220', userScore: 4.8, reviewCount: 207),
   ];
 
   final List<_FallbackAnalysis> _fallbackAnalyses = const [
@@ -112,13 +112,27 @@ class _HomePageState extends ConsumerState<HomePage> {
     '測試廣告：抗痘精華買一送一，限時 48 小時。',
     '測試廣告：控油潔面+抗痘凝膠組合 79 折。',
     '測試廣告：痘痘急救貼滿額免運。',
+    '測試廣告：夜間抗痘修護 2 件 75 折。',
+    '測試廣告：毛孔淨化組合，下單送旅行包。',
+    '測試廣告：痘肌專屬客服諮詢，首購折 100。',
   ];
 
   final List<String> _generalAds = const [
     '測試廣告：男士保濕防曬雙件組 85 折。',
     '測試廣告：夜間修護霜新客首購折扣。',
     '測試廣告：早晚保養入門組限時加贈。',
+    '測試廣告：清爽乳液本週熱銷榜前 3。',
+    '測試廣告：敏感肌舒緩套裝滿千免運。',
+    '測試廣告：會員日加碼回饋 5%。',
   ];
+
+  final Map<String, List<String>> _testingReviews = const {
+    'test-1': ['控油效果明顯，一週有感。', '晚上擦隔天痘痘紅腫有降。'],
+    'test-2': ['不緊繃、清潔力剛好。', '敏感時期也可用。'],
+    'test-3': ['不泛白，通勤很實用。', '清爽不黏膩。'],
+    'test-6': ['黑眼圈看起來有淡一點。', '質地清爽好吸收。'],
+    'test-10': ['一組搞定早晚流程。', '送禮也不錯。'],
+  };
 
   @override
   void initState() {
@@ -317,7 +331,7 @@ class _HomePageState extends ConsumerState<HomePage> {
         _concerns = result.concerns;
         _hasAnalyzed = true;
         _useFallbackTestingProducts = false;
-        _activeAdText = _randomAdByConcerns(result.concerns);
+        _activeAds = _adsByConcerns(result.concerns);
       });
       await _saveScanRecord();
     } catch (_) {
@@ -339,7 +353,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       _concerns = pick.concerns;
       _hasAnalyzed = true;
       _useFallbackTestingProducts = true;
-      _activeAdText = _randomAdByConcerns(_concerns);
+      _activeAds = _adsByConcerns(_concerns);
     });
   }
 
@@ -390,9 +404,10 @@ class _HomePageState extends ConsumerState<HomePage> {
     );
   }
 
-  String _randomAdByConcerns(List<String> concerns) {
+  List<String> _adsByConcerns(List<String> concerns) {
     final source = concerns.contains('痘痘') ? _acneAds : _generalAds;
-    return source[_random.nextInt(source.length)];
+    final shuffled = [...source]..shuffle(_random);
+    return shuffled.take(5).toList();
   }
 
   Set<String> _activeFavoriteIds(User? user) {
@@ -453,6 +468,17 @@ class _HomePageState extends ConsumerState<HomePage> {
           itemBuilder: (context, index) {
             final product = favoriteList[index];
             return ListTile(
+              leading: product.imageUrl == null
+                  ? null
+                  : ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.network(
+                        product.imageUrl!,
+                        width: 44,
+                        height: 44,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
               title: Text(product.name),
               subtitle: Text('價格：\$${product.price.toStringAsFixed(0)}'),
               trailing: TextButton(
@@ -587,6 +613,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       child: _ProductTable(
                         products: displayProducts,
                         favorites: activeFavoriteIds,
+                        reviewSamples: _testingReviews,
                         onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
                         onBuy: _openAffiliate,
                       ),
@@ -595,7 +622,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const SizedBox(height: 12),
                   _AdBanner(
                     hasAcneConcern: _concerns.contains('痘痘'),
-                    adText: _activeAdText,
+                    adMessages: _activeAds,
                   ),
                 ],
               ),
@@ -611,12 +638,14 @@ class _ProductTable extends StatelessWidget {
   const _ProductTable({
     required this.products,
     required this.favorites,
+    required this.reviewSamples,
     required this.onToggleFavorite,
     required this.onBuy,
   });
 
   final List<Product> products;
   final Set<String> favorites;
+  final Map<String, List<String>> reviewSamples;
   final ValueChanged<Product> onToggleFavorite;
   final ValueChanged<Product> onBuy;
 
@@ -636,6 +665,23 @@ class _ProductTable extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (product.imageUrl != null)
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                    child: Image.network(
+                      product.imageUrl!,
+                      width: double.infinity,
+                      height: 140,
+                      fit: BoxFit.cover,
+                    errorBuilder: (context, error, stackTrace) => Container(
+                      height: 140,
+                      color: const Color(0xFFE2E8F0),
+                      alignment: Alignment.center,
+                      child: const Text('圖片載入中'),
+                    ),
+                  ),
+                ),
+              if (product.imageUrl != null) const SizedBox(height: 8),
               Text(
                 product.name,
                 style: Theme.of(context).textTheme.titleSmall,
@@ -648,8 +694,16 @@ class _ProductTable extends StatelessWidget {
                   Text('價格：\$${product.price.toStringAsFixed(0)}'),
                   Text('主成分：${product.mainIngredients.join(', ')}'),
                   Text('推薦星級：${product.rating}/3'),
+                  if (product.userScore != null && product.reviewCount != null)
+                    Text('用戶評價：${product.userScore}/5 (${product.reviewCount} 則)'),
                 ],
               ),
+              if (reviewSamples[product.id] != null) ...[
+                const SizedBox(height: 6),
+                ...reviewSamples[product.id]!.take(2).map(
+                  (review) => Text('• $review'),
+                ),
+              ],
               const SizedBox(height: 8),
               Row(
                 children: [
@@ -672,29 +726,83 @@ class _ProductTable extends StatelessWidget {
   }
 }
 
-class _AdBanner extends StatelessWidget {
+class _AdBanner extends StatefulWidget {
   const _AdBanner({
     required this.hasAcneConcern,
-    required this.adText,
+    required this.adMessages,
   });
 
   final bool hasAcneConcern;
-  final String adText;
+  final List<String> adMessages;
+
+  @override
+  State<_AdBanner> createState() => _AdBannerState();
+}
+
+class _AdBannerState extends State<_AdBanner> {
+  int _index = 0;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTicker();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AdBanner oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.adMessages != widget.adMessages) {
+      _index = 0;
+      _startTicker();
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  void _startTicker() {
+    _timer?.cancel();
+    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
+      if (!mounted || widget.adMessages.isEmpty) return;
+      setState(() {
+        _index = (_index + 1) % widget.adMessages.length;
+      });
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final currentAd = widget.adMessages.isEmpty ? '暫無廣告內容' : widget.adMessages[_index];
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        color: hasAcneConcern ? const Color(0xFFDCFCE7) : const Color(0xFFE0F2FE),
+        borderRadius: BorderRadius.circular(14),
+        color: widget.hasAcneConcern ? const Color(0xFFDCFCE7) : const Color(0xFFE0F2FE),
       ),
       child: Row(
         children: [
           const Icon(Icons.campaign_outlined),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(adText),
+            child: TweenAnimationBuilder<Offset>(
+              tween: Tween(begin: const Offset(1, 0), end: const Offset(0, 0)),
+              duration: const Duration(milliseconds: 450),
+              curve: Curves.easeOut,
+              builder: (context, value, child) {
+                return Transform.translate(
+                  offset: Offset(value.dx * 20, 0),
+                  child: child,
+                );
+              },
+              child: Text(
+                currentAd,
+                key: ValueKey<String>(currentAd),
+              ),
+            ),
           ),
         ],
       ),

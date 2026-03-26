@@ -10,6 +10,9 @@ class Product {
     required this.affiliateUrl,
     required this.isFeatured,
     required this.clickCount,
+    this.imageUrl,
+    this.userScore,
+    this.reviewCount,
   });
 
   final String id;
@@ -20,6 +23,9 @@ class Product {
   final String affiliateUrl;
   final bool isFeatured;
   final int clickCount;
+  final String? imageUrl;
+  final double? userScore;
+  final int? reviewCount;
 
   factory Product.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
     final data = doc.data() ?? <String, dynamic>{};
@@ -32,6 +38,9 @@ class Product {
       affiliateUrl: (data['affiliateUrl'] as String?) ?? '',
       isFeatured: (data['isFeatured'] as bool?) ?? false,
       clickCount: (data['clickCount'] as num?)?.toInt() ?? 0,
+      imageUrl: data['imageUrl'] as String?,
+      userScore: (data['userScore'] as num?)?.toDouble(),
+      reviewCount: (data['reviewCount'] as num?)?.toInt(),
     );
   }
 
@@ -44,6 +53,9 @@ class Product {
       'affiliateUrl': affiliateUrl,
       'isFeatured': isFeatured,
       'clickCount': clickCount,
+      'imageUrl': imageUrl,
+      'userScore': userScore,
+      'reviewCount': reviewCount,
     };
   }
 }
