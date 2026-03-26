@@ -8,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import '../models/app_user.dart';
 import '../models/product.dart';
 import '../providers/product_provider.dart';
 import '../services/auth_service.dart';
@@ -39,6 +38,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   StreamSubscription<List<Product>>? _cloudFavoritesSubscription;
   final _cloudFavoriteIds = <String>{};
   final _cloudFavoriteProducts = <String, Product>{};
+  bool _isAdmin = false;
 
   String _skinType = '尚未分析';
   String _suggestion = '請先拍攝/上傳照片以取得保養建議。';
@@ -139,6 +139,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     _cloudFavoriteProducts.clear();
 
     if (user == null) {
+      _isAdmin = false;
       if (mounted) setState(() {});
       return;
     }
@@ -150,6 +151,14 @@ class _HomePageState extends ConsumerState<HomePage> {
       _cloudFavoriteProducts
         ..clear()
         ..addEntries(products.map((e) => MapEntry(e.id, e)));
+      if (mounted) setState(() {});
+    });
+
+    _authService.isAdmin(user.uid).then((isAdmin) {
+      _isAdmin = isAdmin;
+      if (mounted) setState(() {});
+    }).catchError((_) {
+      _isAdmin = false;
       if (mounted) setState(() {});
     });
   }
@@ -469,134 +478,128 @@ class _HomePageState extends ConsumerState<HomePage> {
         final activeFavoriteIds = _activeFavoriteIds(firebaseUser);
         return SelectionArea(
           child: Scaffold(
-          drawer: StreamBuilder<AppUser?>(
-            stream: _authService.watchCurrentAppUser(),
-            builder: (context, snapshot) {
-              final appUser = snapshot.data;
-              return Drawer(
-                child: ListView(
-                  children: [
-                    DrawerHeader(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('男士 AI 護膚分析儀'),
-                          const SizedBox(height: 8),
-                          Text(firebaseUser?.email ?? '未登入'),
-                        ],
-                      ),
+            drawer: Drawer(
+              child: ListView(
+                children: [
+                  DrawerHeader(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text('男士 AI 護膚分析儀'),
+                        const SizedBox(height: 8),
+                        Text(firebaseUser?.email ?? '未登入'),
+                      ],
                     ),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.favorite_outline),
+                    title: const Text('我的最愛'),
+                    subtitle: Text('已收藏 ${activeFavoriteIds.length} 件'),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showFavoritesSheet(
+                        user: firebaseUser,
+                        currentProducts: displayProducts,
+                      );
+                    },
+                  ),
+                  if (firebaseUser != null)
                     ListTile(
-                      leading: const Icon(Icons.favorite_outline),
-                      title: const Text('我的最愛'),
-                      subtitle: Text('已收藏 ${activeFavoriteIds.length} 件'),
+                      leading: Icon(Icons.show_chart),
+                      title: Text('歷史膚質曲線'),
                       onTap: () {
+                        final userId = firebaseUser.uid;
                         Navigator.pop(context);
-                        _showFavoritesSheet(
-                          user: firebaseUser,
-                          currentProducts: displayProducts,
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => HistoryCurvePage(userId: userId),
+                          ),
                         );
                       },
                     ),
-                    if (firebaseUser != null)
-                      ListTile(
-                        leading: Icon(Icons.show_chart),
-                        title: Text('歷史膚質曲線'),
-                        onTap: () {
-                          final userId = firebaseUser.uid;
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => HistoryCurvePage(userId: userId),
-                            ),
-                          );
-                        },
-                      ),
-                    if (appUser?.isAdmin == true)
-                      ListTile(
-                        leading: const Icon(Icons.admin_panel_settings_outlined),
-                        title: const Text('管理後台'),
-                        onTap: () {
-                          Navigator.pop(context);
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
-                          );
-                        },
-                      ),
-                    const Divider(),
+                  if (_isAdmin)
                     ListTile(
-                      leading: Icon(firebaseUser == null ? Icons.login : Icons.logout),
-                      title: Text(firebaseUser == null ? '登入 / 註冊' : '登出'),
-                      onTap: () async {
+                      leading: const Icon(Icons.admin_panel_settings_outlined),
+                      title: const Text('管理後台'),
+                      onTap: () {
                         Navigator.pop(context);
-                        if (firebaseUser == null) {
-                          await _goAuthPage();
-                          return;
-                        }
-                        await _authService.signOut();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
+                        );
                       },
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-          appBar: AppBar(
-            title: const Text('男士護膚分析儀'),
-            actions: [
-              TextButton.icon(
-                onPressed: _pickAndAnalyze,
-                icon: const Icon(Icons.camera_alt_outlined),
-                label: const Text('分析照片'),
-              ),
-              IconButton(
-                tooltip: firebaseUser == null ? '登入/註冊' : '登出',
-                onPressed: () async {
-                  if (firebaseUser == null) {
-                    await _goAuthPage();
-                    return;
-                  }
-                  await _authService.signOut();
-                },
-                icon: Icon(firebaseUser == null ? Icons.person_outline : Icons.logout),
-              ),
-              const SizedBox(width: 8),
-            ],
-          ),
-          body: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                  const Divider(),
+                  ListTile(
+                    leading: Icon(firebaseUser == null ? Icons.login : Icons.logout),
+                    title: Text(firebaseUser == null ? '登入 / 註冊' : '登出'),
+                    onTap: () async {
+                      Navigator.pop(context);
+                      if (firebaseUser == null) {
+                        await _goAuthPage();
+                        return;
+                      }
+                      await _authService.signOut();
+                    },
+                  ),
+                ],
               ),
             ),
-            child: ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
-                const SizedBox(height: 12),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(12),
-                    child: _ProductTable(
-                      products: displayProducts,
-                      favorites: activeFavoriteIds,
-                      onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
-                      onBuy: _openAffiliate,
-                    ),
-                  ),
+            appBar: AppBar(
+              title: const Text('男士護膚分析儀'),
+              actions: [
+                TextButton.icon(
+                  onPressed: _pickAndAnalyze,
+                  icon: const Icon(Icons.camera_alt_outlined),
+                  label: const Text('分析照片'),
                 ),
-                const SizedBox(height: 12),
-                _AdBanner(
-                  hasAcneConcern: _concerns.contains('痘痘'),
-                  adText: _activeAdText,
+                IconButton(
+                  tooltip: firebaseUser == null ? '登入/註冊' : '登出',
+                  onPressed: () async {
+                    if (firebaseUser == null) {
+                      await _goAuthPage();
+                      return;
+                    }
+                    await _authService.signOut();
+                  },
+                  icon: Icon(firebaseUser == null ? Icons.person_outline : Icons.logout),
                 ),
+                const SizedBox(width: 8),
               ],
             ),
-          ),
+            body: Container(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                ),
+              ),
+              child: ListView(
+                padding: const EdgeInsets.all(16),
+                children: [
+                  TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
+                  const SizedBox(height: 12),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: _ProductTable(
+                        products: displayProducts,
+                        favorites: activeFavoriteIds,
+                        onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
+                        onBuy: _openAffiliate,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _AdBanner(
+                    hasAcneConcern: _concerns.contains('痘痘'),
+                    adText: _activeAdText,
+                  ),
+                ],
+              ),
+            ),
           ),
         );
       },
