@@ -476,44 +476,52 @@ class _ProductTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: DataTable(
-        columns: const [
-          DataColumn(label: Text('產品名')),
-          DataColumn(label: Text('價格')),
-          DataColumn(label: Text('主成分')),
-          DataColumn(label: Text('推薦星級')),
-          DataColumn(label: Text('最愛')),
-          DataColumn(label: Text('購買')),
-        ],
-        rows: products.take(10).map((product) {
-          final isFav = favorites.contains(product.id);
-          return DataRow(
-            color: WidgetStateProperty.resolveWith((_) {
-              return product.isFeatured ? const Color(0xFFFFF9C4) : null;
-            }),
-            cells: [
-              DataCell(Text(product.name)),
-              DataCell(Text('\$${product.price.toStringAsFixed(0)}')),
-              DataCell(Text(product.mainIngredients.join(', '))),
-              DataCell(Text('⭐' * product.rating)),
-              DataCell(
-                IconButton(
-                  onPressed: () => onToggleFavorite(product.id),
-                  icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-                ),
+    return Column(
+      children: products.take(10).map((product) {
+        final isFav = favorites.contains(product.id);
+        return Container(
+          margin: const EdgeInsets.only(bottom: 10),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: product.isFeatured ? const Color(0xFFFFF9C4) : Colors.white,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFFE2E8F0)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                product.name,
+                style: Theme.of(context).textTheme.titleSmall,
               ),
-              DataCell(
-                ElevatedButton(
-                  onPressed: () => onBuy(product),
-                  child: const Text('購買'),
-                ),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 10,
+                runSpacing: 4,
+                children: [
+                  Text('價格：\$${product.price.toStringAsFixed(0)}'),
+                  Text('主成分：${product.mainIngredients.join(', ')}'),
+                  Text('推薦星級：${product.rating}/3'),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  IconButton(
+                    onPressed: () => onToggleFavorite(product.id),
+                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
+                  ),
+                  const SizedBox(width: 8),
+                  FilledButton.tonal(
+                    onPressed: () => onBuy(product),
+                    child: const Text('購買'),
+                  ),
+                ],
               ),
             ],
-          );
-        }).toList(),
-      ),
+          ),
+        );
+      }).toList(),
     );
   }
 }
