@@ -1,21 +1,26 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import '../core/cache/local_cache_service.dart';
 import '../models/product.dart';
 
 class FavoriteService {
-  FavoriteService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+  FavoriteService({
+    FirebaseFirestore? firestore,
+    LocalCacheService? cache,
+  })  : _firestore = firestore ?? FirebaseFirestore.instance,
+        _cache = cache ?? LocalCacheService();
 
   final FirebaseFirestore _firestore;
+  final LocalCacheService _cache;
 
   Stream<List<Product>> watchFavorites(String uid) {
-    return _firestore
+    final stream = _firestore
         .collection('users')
         .doc(uid)
         .collection('favorites')
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) {
+      final products = snapshot.docs.map((doc) {
         final data = doc.data();
         return Product(
           id: doc.id,
@@ -31,7 +36,41 @@ class FavoriteService {
           reviewCount: (data['reviewCount'] as num?)?.toInt(),
         );
       }).toList();
+      _cache.saveJson(
+        'favorites_$uid',
+        products
+            .map(
+              (e) => {
+                'id': e.id,
+                ...e.toFirestore(),
+              },
+            )
+            .toList(),
+      );
+      return products;
     });
+    return stream;
+  }
+
+  Future<List<Product>> readCachedFavorites(String uid) async {
+    final list = await _cache.readJsonList('favorites_$uid');
+    if (list == null) return const [];
+    return list.whereType<Map>().map((raw) {
+      final data = Map<String, dynamic>.from(raw);
+      return Product(
+        id: (data['id'] as String?) ?? (data['name'] as String?) ?? 'cached',
+        name: (data['name'] as String?) ?? '',
+        price: ((data['price'] as num?) ?? 0).toDouble(),
+        mainIngredients: List<String>.from(data['mainIngredients'] ?? const []),
+        rating: ((data['rating'] as num?) ?? 1).clamp(1, 3).toInt(),
+        affiliateUrl: (data['affiliateUrl'] as String?) ?? '',
+        isFeatured: (data['isFeatured'] as bool?) ?? false,
+        clickCount: (data['clickCount'] as num?)?.toInt() ?? 0,
+        imageUrl: data['imageUrl'] as String?,
+        userScore: (data['userScore'] as num?)?.toDouble(),
+        reviewCount: (data['reviewCount'] as num?)?.toInt(),
+      );
+    }).toList();
   }
 
   Future<void> addFavorite({required String uid, required Product product}) {

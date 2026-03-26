@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../core/cache/local_cache_service.dart';
+import '../core/navigation/route_observer.dart';
+import '../l10n/app_strings.dart';
 import '../models/product.dart';
 import '../providers/product_provider.dart';
 import '../services/ads_service.dart';
@@ -29,7 +32,7 @@ class HomePage extends ConsumerStatefulWidget {
   ConsumerState<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends ConsumerState<HomePage> {
+class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   final _random = Random();
   final _favorites = <String>{};
   final _favoriteProducts = <String, Product>{};
@@ -38,6 +41,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _scanRecordService = ScanRecordService();
   final _favoriteService = FavoriteService();
   final _adsService = AdsService();
+  final _cache = LocalCacheService();
 
   StreamSubscription<User?>? _authStateSubscription;
   StreamSubscription<List<Product>>? _cloudFavoritesSubscription;
@@ -46,6 +50,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _cloudFavoriteIds = <String>{};
   final _cloudFavoriteProducts = <String, Product>{};
   final _remoteAdConfigs = <String, AdPoolConfig>{};
+  bool _isPageVisible = true;
+  bool _routeSubscribed = false;
+  String? _currentUid;
 
   bool _isAdmin = false;
   String _skinType = '尚未分析';
@@ -148,48 +155,62 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
-    for (final pool in _adPools) {
-      final sub = _adsService.watchPoolConfig(pool).listen((config) {
-        _remoteAdConfigs[pool] = config;
-        if (mounted) {
-          setState(() => _activeAds = _adsByConcerns(_concerns));
-        }
-      });
-      _adPoolSubscriptions.add(sub);
-    }
+    _loadAdCache();
+    _startAdSubscriptions();
     _activeAds = _adsByConcerns(_concerns);
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final route = ModalRoute.of(context);
+    if (!_routeSubscribed && route != null) {
+      appRouteObserver.subscribe(this, route);
+      _routeSubscribed = true;
+    }
+  }
+
+  @override
   void dispose() {
+    appRouteObserver.unsubscribe(this);
     _authStateSubscription?.cancel();
     _cloudFavoritesSubscription?.cancel();
-    for (final sub in _adPoolSubscriptions) {
-      sub.cancel();
-    }
+    _stopAdSubscriptions();
     super.dispose();
   }
 
-  void _handleAuthChanged(User? user) {
+  @override
+  void didPushNext() {
+    _isPageVisible = false;
     _cloudFavoritesSubscription?.cancel();
+    _cloudFavoritesSubscription = null;
+    _stopAdSubscriptions();
+  }
+
+  @override
+  void didPopNext() {
+    _isPageVisible = true;
+    _startAdSubscriptions();
+    if (_currentUid != null) {
+      _startFavoritesSubscription(_currentUid!);
+    }
+  }
+
+  void _handleAuthChanged(User? user) {
     _cloudFavoriteIds.clear();
     _cloudFavoriteProducts.clear();
+    _currentUid = user?.uid;
 
     if (user == null) {
       _isAdmin = false;
+      _cloudFavoritesSubscription?.cancel();
+      _cloudFavoritesSubscription = null;
       if (mounted) setState(_resetToInitialView);
       return;
     }
 
-    _cloudFavoritesSubscription = _favoriteService.watchFavorites(user.uid).listen((products) {
-      _cloudFavoriteIds
-        ..clear()
-        ..addAll(products.map((e) => e.id));
-      _cloudFavoriteProducts
-        ..clear()
-        ..addEntries(products.map((e) => MapEntry(e.id, e)));
-      if (mounted) setState(() {});
-    });
+    _loadFavoritesCache(user.uid);
+    if (_isPageVisible) _startFavoritesSubscription(user.uid);
 
     _authService.isAdmin(user.uid).then((isAdmin) {
       _isAdmin = isAdmin;
@@ -198,6 +219,59 @@ class _HomePageState extends ConsumerState<HomePage> {
       _isAdmin = false;
       if (mounted) setState(() {});
     });
+  }
+
+  void _startFavoritesSubscription(String uid) {
+    _cloudFavoritesSubscription?.cancel();
+    _cloudFavoritesSubscription = _favoriteService.watchFavorites(uid).listen((products) {
+      _cloudFavoriteIds
+        ..clear()
+        ..addAll(products.map((e) => e.id));
+      _cloudFavoriteProducts
+        ..clear()
+        ..addEntries(products.map((e) => MapEntry(e.id, e)));
+      if (mounted) setState(() {});
+    });
+  }
+
+  void _startAdSubscriptions() {
+    _stopAdSubscriptions();
+    for (final pool in _adPools) {
+      final sub = _adsService.watchPoolConfig(pool).listen((config) {
+        _remoteAdConfigs[pool] = config;
+        _cache.saveJson('adConfig_$pool', config.toMap());
+        if (mounted) setState(() => _activeAds = _adsByConcerns(_concerns));
+      });
+      _adPoolSubscriptions.add(sub);
+    }
+  }
+
+  void _stopAdSubscriptions() {
+    for (final sub in _adPoolSubscriptions) {
+      sub.cancel();
+    }
+    _adPoolSubscriptions.clear();
+  }
+
+  Future<void> _loadAdCache() async {
+    for (final pool in _adPools) {
+      final data = await _cache.readJsonMap('adConfig_$pool');
+      if (data != null) {
+        _remoteAdConfigs[pool] = AdPoolConfig.fromDoc(pool, data);
+      }
+    }
+    if (mounted) setState(() {});
+  }
+
+  Future<void> _loadFavoritesCache(String uid) async {
+    final cached = await _favoriteService.readCachedFavorites(uid);
+    _cloudFavoriteIds
+      ..clear()
+      ..addAll(cached.map((e) => e.id));
+    _cloudFavoriteProducts
+      ..clear()
+      ..addEntries(cached.map((e) => MapEntry(e.id, e)));
+    if (mounted) setState(() {});
   }
 
   void _resetToInitialView() {
@@ -375,7 +449,7 @@ class _HomePageState extends ConsumerState<HomePage> {
       await _saveScanRecord();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('分析暫時不可用，已套用測試資料供你繼續檢視流程。')),
+        SnackBar(content: Text(AppStrings.of(context).t('analysisUnavailable'))),
       );
     }
   }
@@ -536,9 +610,9 @@ class _HomePageState extends ConsumerState<HomePage> {
       showDragHandle: true,
       builder: (context) {
         if (favoriteList.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: Text('目前尚未加入任何最愛商品。'),
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: Text(AppStrings.of(context).t('noFavorite')),
           );
         }
         return ListView.separated(
@@ -563,7 +637,7 @@ class _HomePageState extends ConsumerState<HomePage> {
               subtitle: Text('價格：\$${product.price.toStringAsFixed(0)}'),
               trailing: TextButton(
                 onPressed: () => _openAffiliate(product),
-                child: const Text('購買'),
+                child: Text(AppStrings.of(context).t('buy')),
               ),
             );
           },
@@ -597,15 +671,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('男士 AI 護膚分析儀'),
+                        Text(AppStrings.of(context).t('appTitle')),
                         const SizedBox(height: 8),
-                        Text(firebaseUser?.email ?? '未登入'),
+                        Text(firebaseUser?.email ?? AppStrings.of(context).t('notLoggedIn')),
                       ],
                     ),
                   ),
                   ListTile(
                     leading: const Icon(Icons.favorite_outline),
-                    title: const Text('我的最愛'),
+                    title: Text(AppStrings.of(context).t('favorites')),
                     subtitle: Text('已收藏 ${activeFavoriteIds.length} 件'),
                     onTap: () {
                       Navigator.pop(context);
@@ -618,7 +692,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   if (firebaseUser != null)
                     ListTile(
                       leading: const Icon(Icons.show_chart),
-                      title: const Text('歷史膚質曲線'),
+                      title: Text(AppStrings.of(context).t('historyCurve')),
                       onTap: () {
                         final userId = firebaseUser.uid;
                         Navigator.pop(context);
@@ -633,7 +707,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   if (_isAdmin)
                     ListTile(
                       leading: const Icon(Icons.admin_panel_settings_outlined),
-                      title: const Text('管理後台'),
+                      title: Text(AppStrings.of(context).t('adminDashboard')),
                       onTap: () {
                         Navigator.pop(context);
                         Navigator.push(
@@ -645,7 +719,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                   const Divider(),
                   ListTile(
                     leading: Icon(firebaseUser == null ? Icons.login : Icons.logout),
-                    title: Text(firebaseUser == null ? '登入 / 註冊' : '登出'),
+                    title: Text(
+                      firebaseUser == null
+                          ? AppStrings.of(context).t('loginRegister')
+                          : AppStrings.of(context).t('logout'),
+                    ),
                     onTap: () async {
                       Navigator.pop(context);
                       if (firebaseUser == null) {
@@ -659,12 +737,12 @@ class _HomePageState extends ConsumerState<HomePage> {
               ),
             ),
             appBar: AppBar(
-              title: const Text('男士護膚分析儀'),
+              title: Text(AppStrings.of(context).t('appTitle')),
               actions: [
                 TextButton.icon(
                   onPressed: _pickAndAnalyze,
                   icon: const Icon(Icons.camera_alt_outlined),
-                  label: const Text('分析照片'),
+                  label: Text(AppStrings.of(context).t('analyzePhoto')),
                 ),
                 IconButton(
                   tooltip: firebaseUser == null ? '登入/註冊' : '登出',
@@ -697,9 +775,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                     child: Padding(
                       padding: const EdgeInsets.all(12),
                       child: TextField(
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           prefixIcon: Icon(Icons.search),
-                          hintText: '搜尋產品名稱或成分',
+                          hintText: AppStrings.of(context).t('searchProduct'),
                         ),
                         onChanged: (value) => setState(() => _searchQuery = value),
                       ),
@@ -715,6 +793,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                         reviewSamples: _testingReviews,
                         onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
                         onBuy: _openAffiliate,
+                        buyLabel: AppStrings.of(context).t('buy'),
+                        noProductText: AppStrings.of(context).t('noProduct'),
                       ),
                     ),
                   ),

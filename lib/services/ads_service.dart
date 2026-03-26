@@ -54,9 +54,49 @@ class AdsService {
   }
 
   Future<void> savePoolConfig(AdPoolConfig config) {
-    return _firestore
+    return _firestore.collection('adConfigs').doc(config.pool).set(
+          config.toMap(),
+          SetOptions(merge: true),
+        );
+  }
+
+  Future<void> saveDraftConfig(AdPoolConfig config) {
+    return _firestore.collection('adConfigDrafts').doc(config.pool).set(
+          config.toMap(),
+          SetOptions(merge: true),
+        );
+  }
+
+  Future<AdPoolConfig> getDraftConfigOnce(String pool) async {
+    final doc = await _firestore.collection('adConfigDrafts').doc(pool).get();
+    return AdPoolConfig.fromDoc(pool, doc.data());
+  }
+
+  Future<void> publishPoolConfig(AdPoolConfig config) async {
+    final current = await getPoolConfigOnce(config.pool);
+    await _firestore.runTransaction((tx) async {
+      final liveRef = _firestore.collection('adConfigs').doc(config.pool);
+      final historyRef = liveRef.collection('history').doc();
+      tx.set(liveRef, config.toMap(), SetOptions(merge: true));
+      tx.set(historyRef, {
+        'messages': current.messages,
+        'enabled': current.enabled,
+        'priority': current.priority,
+        'createdAt': FieldValue.serverTimestamp(),
+      });
+    });
+  }
+
+  Future<List<AdPoolConfig>> getPoolHistory(String pool, {int limit = 10}) async {
+    final snapshot = await _firestore
         .collection('adConfigs')
-        .doc(config.pool)
-        .set(config.toMap(), SetOptions(merge: true));
+        .doc(pool)
+        .collection('history')
+        .orderBy('createdAt', descending: true)
+        .limit(limit)
+        .get();
+    return snapshot.docs
+        .map((doc) => AdPoolConfig.fromDoc(pool, doc.data()))
+        .toList();
   }
 }

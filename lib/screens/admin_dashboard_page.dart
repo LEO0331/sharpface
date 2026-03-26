@@ -54,10 +54,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _loadAds() async {
     try {
       for (final pool in _controllers.keys) {
-        final config = await _adsService.getPoolConfigOnce(pool);
-        _controllers[pool]!.text = config.messages.join('\n');
-        _enabled[pool] = config.enabled;
-        _priority[pool] = config.priority;
+        final draft = await _adsService.getDraftConfigOnce(pool);
+        final live = await _adsService.getPoolConfigOnce(pool);
+        final source = draft.messages.isNotEmpty ? draft : live;
+        _controllers[pool]!.text = source.messages.join('\n');
+        _enabled[pool] = source.enabled;
+        _priority[pool] = source.priority;
       }
     } catch (_) {
       // Keep defaults if no permission or missing docs.
@@ -66,37 +68,126 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     }
   }
 
-  Future<void> _saveAds() async {
+  AdPoolConfig _buildConfig(String pool) {
+    final messages = _controllers[pool]!
+        .text
+        .split('\n')
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
+    return AdPoolConfig(
+      pool: pool,
+      messages: messages,
+      enabled: _enabled[pool] ?? true,
+      priority: _priority[pool] ?? 100,
+    );
+  }
+
+  Future<void> _saveDrafts() async {
     setState(() => _savingAds = true);
     try {
-      for (final entry in _controllers.entries) {
-        final pool = entry.key;
-        final messages = entry.value.text
-            .split('\n')
-            .map((e) => e.trim())
-            .where((e) => e.isNotEmpty)
-            .toList();
-        final config = AdPoolConfig(
-          pool: pool,
-          messages: messages,
-          enabled: _enabled[pool] ?? true,
-          priority: _priority[pool] ?? 100,
-        );
-        await _adsService.savePoolConfig(config);
+      for (final pool in _controllers.keys) {
+        await _adsService.saveDraftConfig(_buildConfig(pool));
       }
-
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('廣告池設定已儲存到 Firestore。')),
+        const SnackBar(content: Text('草稿已儲存。')),
       );
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('儲存失敗：$e')),
+        SnackBar(content: Text('草稿儲存失敗：$e')),
       );
     } finally {
       if (mounted) setState(() => _savingAds = false);
     }
+  }
+
+  Future<void> _publishAll() async {
+    setState(() => _savingAds = true);
+    try {
+      for (final pool in _controllers.keys) {
+        await _adsService.publishPoolConfig(_buildConfig(pool));
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('廣告池已發布。')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('發布失敗：$e')),
+      );
+    } finally {
+      if (mounted) setState(() => _savingAds = false);
+    }
+  }
+
+  void _previewPool(String pool) {
+    final config = _buildConfig(pool);
+    final label = _poolLabels[pool] ?? pool;
+    showDialog<void>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text('$label 預覽'),
+          content: SizedBox(
+            width: 420,
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Text('Enabled: ${config.enabled}'),
+                Text('Priority: ${config.priority}'),
+                const SizedBox(height: 10),
+                ...config.messages.map((m) => Text('• $m')),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('關閉'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _rollbackPool(String pool) async {
+    final history = await _adsService.getPoolHistory(pool, limit: 15);
+    if (!mounted) return;
+
+    if (history.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('沒有可回滾的歷史版本。')),
+      );
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (context) {
+        return ListView.builder(
+          itemCount: history.length,
+          itemBuilder: (context, index) {
+            final item = history[index];
+            return ListTile(
+              title: Text('版本 ${index + 1} | priority=${item.priority} | enabled=${item.enabled}'),
+              subtitle: Text(item.messages.isEmpty ? '無文案' : item.messages.first),
+              onTap: () {
+                _controllers[pool]!.text = item.messages.join('\n');
+                _enabled[pool] = item.enabled;
+                _priority[pool] = item.priority;
+                setState(() {});
+                Navigator.pop(context);
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
   @override
@@ -147,7 +238,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
-                        const Text('可設定啟用/停用、排序權重 (越大優先)、每行一則文案。'),
+                        const Text('可設定啟用/停用、排序權重、預覽、草稿、回滾。'),
                         const SizedBox(height: 12),
                         if (_loadingAds)
                           const Padding(
@@ -186,9 +277,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                         child: TextFormField(
                                           initialValue: (_priority[pool] ?? 100).toString(),
                                           keyboardType: TextInputType.number,
-                                          decoration: const InputDecoration(
-                                            labelText: '權重',
-                                          ),
+                                          decoration: const InputDecoration(labelText: '權重'),
                                           onChanged: (value) {
                                             _priority[pool] = int.tryParse(value) ?? 0;
                                           },
@@ -204,14 +293,38 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                       alignLabelWithHint: true,
                                     ),
                                   ),
+                                  const SizedBox(height: 8),
+                                  Wrap(
+                                    spacing: 8,
+                                    children: [
+                                      OutlinedButton(
+                                        onPressed: () => _previewPool(pool),
+                                        child: const Text('預覽'),
+                                      ),
+                                      OutlinedButton(
+                                        onPressed: () => _rollbackPool(pool),
+                                        child: const Text('回滾'),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             );
                           }),
-                          FilledButton.icon(
-                            onPressed: _savingAds ? null : _saveAds,
-                            icon: const Icon(Icons.save_outlined),
-                            label: Text(_savingAds ? '儲存中...' : '儲存廣告池設定'),
+                          Wrap(
+                            spacing: 10,
+                            children: [
+                              OutlinedButton.icon(
+                                onPressed: _savingAds ? null : _saveDrafts,
+                                icon: const Icon(Icons.drafts_outlined),
+                                label: const Text('儲存草稿'),
+                              ),
+                              FilledButton.icon(
+                                onPressed: _savingAds ? null : _publishAll,
+                                icon: const Icon(Icons.publish_outlined),
+                                label: Text(_savingAds ? '發布中...' : '發布到線上'),
+                              ),
+                            ],
                           ),
                         ],
                       ],

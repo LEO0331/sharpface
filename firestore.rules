@@ -48,6 +48,14 @@ service cloud.firestore {
     match /adConfigs/{docId} {
       allow read: if true;
       allow write: if isAdmin();
+
+      match /history/{historyId} {
+        allow read, write: if isAdmin();
+      }
+    }
+
+    match /adConfigDrafts/{docId} {
+      allow read, write: if isAdmin();
     }
   }
 }

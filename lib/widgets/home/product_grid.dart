@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
 import '../../models/product.dart';
@@ -10,6 +11,8 @@ class ProductGrid extends StatelessWidget {
     required this.reviewSamples,
     required this.onToggleFavorite,
     required this.onBuy,
+    required this.buyLabel,
+    required this.noProductText,
   });
 
   final List<Product> products;
@@ -17,14 +20,16 @@ class ProductGrid extends StatelessWidget {
   final Map<String, List<String>> reviewSamples;
   final ValueChanged<Product> onToggleFavorite;
   final ValueChanged<Product> onBuy;
+  final String buyLabel;
+  final String noProductText;
 
   @override
   Widget build(BuildContext context) {
     final items = products.take(10).toList();
     if (items.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.all(16),
-        child: Text('查無符合條件的產品。'),
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Text(noProductText),
       );
     }
 
@@ -52,20 +57,27 @@ class ProductGrid extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (product.imageUrl != null)
-                ClipRRect(
+                Semantics(
+                  label: 'product-image-${product.name}',
+                  child: ClipRRect(
                   borderRadius: BorderRadius.circular(10),
-                  child: Image.network(
-                    product.imageUrl!,
+                  child: CachedNetworkImage(
+                    imageUrl: product.imageUrl!,
                     width: double.infinity,
                     height: 92,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
+                    placeholder: (context, url) => Container(
+                      height: 92,
+                      color: const Color(0xFFE2E8F0),
+                    ),
+                    errorWidget: (context, url, error) => Container(
                       height: 92,
                       color: const Color(0xFFE2E8F0),
                       alignment: Alignment.center,
                       child: const Text('圖片載入中'),
                     ),
                   ),
+                ),
                 ),
               if (product.imageUrl != null) const SizedBox(height: 8),
               Text(
@@ -108,7 +120,7 @@ class ProductGrid extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         minimumSize: const Size(0, 32),
                       ),
-                      child: const Text('購買'),
+                      child: Text(buyLabel),
                     ),
                   ),
                 ],
