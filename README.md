@@ -14,7 +14,7 @@ flutter pub get
 flutter run --dart-define=OPENAI_API_KEY=your_openai_api_key
 ```
 
-## Firebase 設定
+## Firebase 設定2
 
 - 啟用 `Email/Password` 登入。
 - 啟用 `Phone` 登入（供訪客 SMS OTP 驗證）。

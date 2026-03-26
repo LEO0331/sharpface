@@ -40,7 +40,7 @@ class OpenAIService {
         'Authorization': 'Bearer $apiKey',
       },
       body: jsonEncode({
-        'model': 'gpt-4.1-mini',
+        'model': 'gpt-4.1-mini', //gpt-4.1-nano - https://openai.com/zh-Hant/api/pricing/
         'messages': [
           {
             'role': 'system',

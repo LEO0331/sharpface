@@ -78,4 +78,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'sharpface.firebasestorage.app',
     iosBundleId: 'com.example.sharpface',
   );
+
 }
