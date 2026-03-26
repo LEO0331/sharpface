@@ -47,7 +47,7 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
         password: _loginPasswordController.text,
       );
       if (!mounted) return;
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('登入失敗：$e')));
@@ -67,7 +67,7 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
             : _registerPhoneController.text.trim(),
       );
       if (!mounted) return;
-      Navigator.pop(context);
+      Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('註冊失敗：$e')));

@@ -11,9 +11,11 @@ import '../models/product.dart';
 import '../providers/product_provider.dart';
 import '../services/auth_service.dart';
 import '../services/openai_service.dart';
+import '../services/scan_record_service.dart';
 import '../widgets/top_care_guide_card.dart';
 import 'admin_dashboard_page.dart';
 import 'auth_page.dart';
+import 'history_curve_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -26,11 +28,47 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _favorites = <String>{};
   final _openAI = OpenAIService(apiKey: const String.fromEnvironment('OPENAI_API_KEY'));
   final _authService = AuthService();
+  final _scanRecordService = ScanRecordService();
 
   String _skinType = '尚未分析';
   String _suggestion = '請先拍攝/上傳照片以取得保養建議。';
   List<String> _concerns = const [];
   bool _guestScanUsed = false;
+  bool _hasAnalyzed = false;
+  String? _guestPhoneForRecord;
+
+  final List<Product> _staticProducts = const [
+    Product(
+      id: 'static-1',
+      name: '控油潔面膠',
+      price: 450,
+      mainIngredients: ['水楊酸', '菸鹼醯胺'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/oil-cleanser',
+      isFeatured: true,
+      clickCount: 0,
+    ),
+    Product(
+      id: 'static-2',
+      name: '抗痘精華',
+      price: 980,
+      mainIngredients: ['杜鵑花酸', '積雪草'],
+      rating: 3,
+      affiliateUrl: 'https://example.com/acne-serum',
+      isFeatured: false,
+      clickCount: 0,
+    ),
+    Product(
+      id: 'static-3',
+      name: '清爽保濕乳',
+      price: 720,
+      mainIngredients: ['玻尿酸', '神經醯胺'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/moisture-lotion',
+      isFeatured: false,
+      clickCount: 0,
+    ),
+  ];
 
   Future<void> _pickAndAnalyze() async {
     final canScan = await _ensureScanPermission();
@@ -159,6 +197,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             return;
                           }
 
+                          _guestPhoneForRecord = phoneController.text.trim();
                           Navigator.pop(dialogContext, true);
                         },
                   child: verifying ? const Text('驗證中') : const Text('驗證並繼續'),
@@ -183,29 +222,107 @@ class _HomePageState extends ConsumerState<HomePage> {
         _skinType = result.skinType;
         _suggestion = result.suggestion;
         _concerns = result.concerns;
+        _hasAnalyzed = true;
       });
+      await _saveScanRecord();
     } catch (_) {
       if (!mounted) return;
+      setState(() {
+        _skinType = '混合肌（測試）';
+        _suggestion = '目前顯示測試分析結果。建議白天控油保濕並加強防曬，夜間溫和修護。';
+        _concerns = const ['痘痘', '黑眼圈'];
+        _hasAnalyzed = true;
+      });
+      await _saveScanRecord();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('分析失敗，請檢查 OPENAI_API_KEY。')),
+        const SnackBar(content: Text('分析暫時不可用，已套用測試資料供你繼續檢視流程。')),
       );
     }
+  }
+
+  Future<void> _saveScanRecord() async {
+    final user = FirebaseAuth.instance.currentUser;
+    await _scanRecordService.addScanRecord(
+      userId: user?.uid ?? 'guest',
+      skinType: _skinType,
+      suggestion: _suggestion,
+      concerns: _concerns,
+      contact: user?.email ?? _guestPhoneForRecord,
+    );
   }
 
   Future<void> _openAffiliate(Product product) async {
     final uri = Uri.tryParse(product.affiliateUrl);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
-    await ref.read(productRepositoryProvider).increaseClickCount(product.id);
+    try {
+      await ref.read(productRepositoryProvider).increaseClickCount(product.id);
+    } catch (_) {
+      // Ignore click count update failures for static/testing products.
+    }
   }
 
   Future<void> _goAuthPage() async {
-    await Navigator.push(
+    final success = await Navigator.push<bool>(
       context,
       MaterialPageRoute(builder: (_) => const AuthPage()),
     );
     if (!mounted) return;
+    if (success == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('登入/註冊成功')),
+      );
+    }
     setState(() {});
+  }
+
+  List<Product> _resolveTableProducts(AsyncValue<List<Product>> productsAsync) {
+    if (!_hasAnalyzed) return _staticProducts;
+
+    return productsAsync.when(
+      data: (products) => products.isEmpty ? _testingProductsByConcern(_concerns) : products,
+      loading: () => _testingProductsByConcern(_concerns),
+      error: (_, _) => _testingProductsByConcern(_concerns),
+    );
+  }
+
+  List<Product> _testingProductsByConcern(List<String> concerns) {
+    final hasAcne = concerns.contains('痘痘');
+    final list = <Product>[
+      Product(
+        id: 'test-1',
+        name: hasAcne ? '抗痘修護精華（測試）' : '全能保濕精華（測試）',
+        price: hasAcne ? 1090 : 990,
+        mainIngredients: hasAcne ? ['杜鵑花酸', 'B5'] : ['玻尿酸', '神經醯胺'],
+        rating: 3,
+        affiliateUrl: 'https://example.com/test-serum',
+        isFeatured: true,
+        clickCount: 0,
+      ),
+      Product(
+        id: 'test-2',
+        name: '溫和潔面（測試）',
+        price: 420,
+        mainIngredients: const ['胺基酸', '甘草'],
+        rating: 2,
+        affiliateUrl: 'https://example.com/test-cleanser',
+        isFeatured: false,
+        clickCount: 0,
+      ),
+      Product(
+        id: 'test-3',
+        name: '日間防曬 SPF50（測試）',
+        price: 680,
+        mainIngredients: const ['氧化鋅', '維他命E'],
+        rating: 2,
+        affiliateUrl: 'https://example.com/test-sunscreen',
+        isFeatured: false,
+        clickCount: 0,
+      ),
+    ];
+    list.sort((a, b) => (b.isFeatured ? 1 : 0) - (a.isFeatured ? 1 : 0));
+    return list;
   }
 
   @override
@@ -240,9 +357,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                       subtitle: Text('已收藏 ${_favorites.length} 件'),
                     ),
                     if (appUser != null)
-                      const ListTile(
+                      ListTile(
                         leading: Icon(Icons.show_chart),
                         title: Text('歷史膚質曲線'),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HistoryCurvePage(userId: firebaseUser!.uid),
+                            ),
+                          );
+                        },
                       ),
                     if (appUser?.isAdmin == true)
                       ListTile(
@@ -275,7 +401,7 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
           ),
           appBar: AppBar(
-            title: const Text('男士 AI 護膚分析儀'),
+            title: const Text('男士護膚分析儀'),
             actions: [
               TextButton.icon(
                 onPressed: _pickAndAnalyze,
@@ -312,25 +438,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Card(
                   child: Padding(
                     padding: const EdgeInsets.all(12),
-                    child: productsAsync.when(
-                      data: (products) => _ProductTable(
-                        products: products,
-                        favorites: _favorites,
-                        onToggleFavorite: (id) {
-                          setState(() {
-                            if (!_favorites.remove(id)) _favorites.add(id);
-                          });
-                        },
-                        onBuy: _openAffiliate,
-                      ),
-                      loading: () => const Padding(
-                        padding: EdgeInsets.all(18),
-                        child: Center(child: CircularProgressIndicator()),
-                      ),
-                      error: (err, _) => Padding(
-                        padding: const EdgeInsets.all(18),
-                        child: Text('產品讀取失敗：$err'),
-                      ),
+                    child: _ProductTable(
+                      products: _resolveTableProducts(productsAsync),
+                      favorites: _favorites,
+                      onToggleFavorite: (id) {
+                        setState(() {
+                          if (!_favorites.remove(id)) _favorites.add(id);
+                        });
+                      },
+                      onBuy: _openAffiliate,
                     ),
                   ),
                 ),
