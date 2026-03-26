@@ -15,6 +15,8 @@ import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import '../services/openai_service.dart';
 import '../services/scan_record_service.dart';
+import '../widgets/home/ad_marquee_banner.dart';
+import '../widgets/home/product_grid.dart';
 import '../widgets/top_care_guide_card.dart';
 import 'admin_dashboard_page.dart';
 import 'auth_page.dart';
@@ -36,56 +38,39 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _scanRecordService = ScanRecordService();
   final _favoriteService = FavoriteService();
   final _adsService = AdsService();
+
   StreamSubscription<User?>? _authStateSubscription;
   StreamSubscription<List<Product>>? _cloudFavoritesSubscription;
-  StreamSubscription<List<String>>? _acneAdsSubscription;
-  StreamSubscription<List<String>>? _generalAdsSubscription;
+  final _adPoolSubscriptions = <StreamSubscription<AdPoolConfig>>[];
+
   final _cloudFavoriteIds = <String>{};
   final _cloudFavoriteProducts = <String, Product>{};
-  List<String> _remoteAcneAds = const [];
-  List<String> _remoteGeneralAds = const [];
-  bool _isAdmin = false;
+  final _remoteAdConfigs = <String, AdPoolConfig>{};
 
+  bool _isAdmin = false;
   String _skinType = '尚未分析';
   String _suggestion = '請先拍攝/上傳照片以取得保養建議。';
   List<String> _concerns = const [];
+  String _searchQuery = '';
   bool _guestScanUsed = false;
   bool _hasAnalyzed = false;
   bool _useFallbackTestingProducts = false;
   String? _guestPhoneForRecord;
   List<String> _activeAds = const ['測試廣告：男士保濕與防曬入門套組。'];
 
+  static const _adPools = [
+    'general',
+    'acne',
+    'dryness',
+    'darkcircle',
+    'sensitive',
+    'antiaging',
+  ];
+
   final List<Product> _staticProducts = const [
-    Product(
-      id: 'static-1',
-      name: '控油潔面膠',
-      price: 450,
-      mainIngredients: ['水楊酸', '菸鹼醯胺'],
-      rating: 2,
-      affiliateUrl: 'https://example.com/oil-cleanser',
-      isFeatured: true,
-      clickCount: 0,
-    ),
-    Product(
-      id: 'static-2',
-      name: '抗痘精華',
-      price: 980,
-      mainIngredients: ['杜鵑花酸', '積雪草'],
-      rating: 3,
-      affiliateUrl: 'https://example.com/acne-serum',
-      isFeatured: false,
-      clickCount: 0,
-    ),
-    Product(
-      id: 'static-3',
-      name: '清爽保濕乳',
-      price: 720,
-      mainIngredients: ['玻尿酸', '神經醯胺'],
-      rating: 2,
-      affiliateUrl: 'https://example.com/moisture-lotion',
-      isFeatured: false,
-      clickCount: 0,
-    ),
+    Product(id: 'static-1', name: '控油潔面膠', price: 450, mainIngredients: ['水楊酸', '菸鹼醯胺'], rating: 2, affiliateUrl: 'https://example.com/oil-cleanser', isFeatured: true, clickCount: 0),
+    Product(id: 'static-2', name: '抗痘精華', price: 980, mainIngredients: ['杜鵑花酸', '積雪草'], rating: 3, affiliateUrl: 'https://example.com/acne-serum', isFeatured: false, clickCount: 0),
+    Product(id: 'static-3', name: '清爽保濕乳', price: 720, mainIngredients: ['玻尿酸', '神經醯胺'], rating: 2, affiliateUrl: 'https://example.com/moisture-lotion', isFeatured: false, clickCount: 0),
   ];
 
   final List<Product> _testingProducts = const [
@@ -122,7 +107,6 @@ class _HomePageState extends ConsumerState<HomePage> {
     '測試廣告：毛孔淨化組合，下單送旅行包。',
     '測試廣告：痘肌專屬客服諮詢，首購折 100。',
   ];
-
   final List<String> _generalAds = const [
     '測試廣告：男士保濕防曬雙件組 85 折。',
     '測試廣告：夜間修護霜新客首購折扣。',
@@ -130,6 +114,26 @@ class _HomePageState extends ConsumerState<HomePage> {
     '測試廣告：清爽乳液本週熱銷榜前 3。',
     '測試廣告：敏感肌舒緩套裝滿千免運。',
     '測試廣告：會員日加碼回饋 5%。',
+  ];
+  final List<String> _drynessAds = const [
+    '測試廣告：高保濕修護乳，乾燥季限定折扣。',
+    '測試廣告：神經醯胺鎖水精華第二件半價。',
+    '測試廣告：乾肌夜間修護組送面膜 2 片。',
+  ];
+  final List<String> _darkcircleAds = const [
+    '測試廣告：眼周亮白精華，黑眼圈專案價。',
+    '測試廣告：咖啡因眼部凝膠新客 8 折。',
+    '測試廣告：晚安眼膜組合買二送一。',
+  ];
+  final List<String> _sensitiveAds = const [
+    '測試廣告：敏感肌舒緩組，無香精低刺激。',
+    '測試廣告：修護屏障乳，首購現折 120。',
+    '測試廣告：泛紅急救組限時免運。',
+  ];
+  final List<String> _antiagingAds = const [
+    '測試廣告：抗老精華體驗組本週 79 折。',
+    '測試廣告：胜肽修護乳，會員點數雙倍。',
+    '測試廣告：夜間緊緻組合加贈旅行瓶。',
   ];
 
   final Map<String, List<String>> _testingReviews = const {
@@ -144,26 +148,25 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
-    _acneAdsSubscription = _adsService.watchPool('acne').listen((messages) {
-      _remoteAcneAds = messages;
-      if (mounted && _concerns.contains('痘痘')) {
-        setState(() => _activeAds = _adsByConcerns(_concerns));
-      }
-    });
-    _generalAdsSubscription = _adsService.watchPool('general').listen((messages) {
-      _remoteGeneralAds = messages;
-      if (mounted && !_concerns.contains('痘痘')) {
-        setState(() => _activeAds = _adsByConcerns(_concerns));
-      }
-    });
+    for (final pool in _adPools) {
+      final sub = _adsService.watchPoolConfig(pool).listen((config) {
+        _remoteAdConfigs[pool] = config;
+        if (mounted) {
+          setState(() => _activeAds = _adsByConcerns(_concerns));
+        }
+      });
+      _adPoolSubscriptions.add(sub);
+    }
+    _activeAds = _adsByConcerns(_concerns);
   }
 
   @override
   void dispose() {
     _authStateSubscription?.cancel();
     _cloudFavoritesSubscription?.cancel();
-    _acneAdsSubscription?.cancel();
-    _generalAdsSubscription?.cancel();
+    for (final sub in _adPoolSubscriptions) {
+      sub.cancel();
+    }
     super.dispose();
   }
 
@@ -174,7 +177,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
     if (user == null) {
       _isAdmin = false;
-      if (mounted) setState(() {});
+      if (mounted) setState(_resetToInitialView);
       return;
     }
 
@@ -195,6 +198,18 @@ class _HomePageState extends ConsumerState<HomePage> {
       _isAdmin = false;
       if (mounted) setState(() {});
     });
+  }
+
+  void _resetToInitialView() {
+    _skinType = '尚未分析';
+    _suggestion = '請先拍攝/上傳照片以取得保養建議。';
+    _concerns = const [];
+    _searchQuery = '';
+    _guestScanUsed = false;
+    _hasAnalyzed = false;
+    _useFallbackTestingProducts = false;
+    _guestPhoneForRecord = null;
+    _activeAds = _adsByConcerns(const []);
   }
 
   Future<void> _pickAndAnalyze() async {
@@ -413,7 +428,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     setState(() {});
   }
 
-  List<Product> _resolveTableProducts(AsyncValue<List<Product>> productsAsync) {
+  List<Product> _resolveProducts(AsyncValue<List<Product>> productsAsync) {
     if (!_hasAnalyzed) return _staticProducts;
     if (_useFallbackTestingProducts) return _testingProducts;
 
@@ -425,11 +440,54 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   List<String> _adsByConcerns(List<String> concerns) {
-    final source = concerns.contains('痘痘')
-        ? (_remoteAcneAds.isNotEmpty ? _remoteAcneAds : _acneAds)
-        : (_remoteGeneralAds.isNotEmpty ? _remoteGeneralAds : _generalAds);
+    final pool = _selectAdPool(concerns);
+    final config = _remoteAdConfigs[pool];
+    final source = (config != null && config.enabled && config.messages.isNotEmpty)
+        ? config.messages
+        : _fallbackAdsByPool(pool);
     final shuffled = [...source]..shuffle(_random);
     return shuffled.take(5).toList();
+  }
+
+  String _selectAdPool(List<String> concerns) {
+    final candidates = <String>{'general'};
+    if (concerns.contains('痘痘')) candidates.add('acne');
+    if (concerns.contains('黑眼圈')) candidates.add('darkcircle');
+    if (concerns.contains('乾燥') || concerns.contains('脫皮')) candidates.add('dryness');
+    if (concerns.contains('泛紅') || concerns.contains('刺癢')) candidates.add('sensitive');
+    if (concerns.contains('細紋') || concerns.contains('暗沉')) candidates.add('antiaging');
+
+    String selected = 'general';
+    var selectedPriority = -9999;
+
+    for (final pool in candidates) {
+      final config = _remoteAdConfigs[pool];
+      final enabled = config?.enabled ?? true;
+      if (!enabled) continue;
+      final priority = config?.priority ?? (pool == 'general' ? 10 : 100);
+      if (priority > selectedPriority) {
+        selectedPriority = priority;
+        selected = pool;
+      }
+    }
+    return selected;
+  }
+
+  List<String> _fallbackAdsByPool(String pool) {
+    switch (pool) {
+      case 'acne':
+        return _acneAds;
+      case 'dryness':
+        return _drynessAds;
+      case 'darkcircle':
+        return _darkcircleAds;
+      case 'sensitive':
+        return _sensitiveAds;
+      case 'antiaging':
+        return _antiagingAds;
+      default:
+        return _generalAds;
+    }
   }
 
   Set<String> _activeFavoriteIds(User? user) {
@@ -517,7 +575,13 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productProvider);
-    final displayProducts = _resolveTableProducts(productsAsync);
+    final displayProducts = _resolveProducts(productsAsync);
+    final filteredProducts = displayProducts.where((product) {
+      if (_searchQuery.trim().isEmpty) return true;
+      final q = _searchQuery.trim().toLowerCase();
+      return product.name.toLowerCase().contains(q) ||
+          product.mainIngredients.any((i) => i.toLowerCase().contains(q));
+    }).toList();
 
     return StreamBuilder<User?>(
       stream: _authService.authStateChanges(),
@@ -547,14 +611,14 @@ class _HomePageState extends ConsumerState<HomePage> {
                       Navigator.pop(context);
                       _showFavoritesSheet(
                         user: firebaseUser,
-                        currentProducts: displayProducts,
+                        currentProducts: filteredProducts,
                       );
                     },
                   ),
                   if (firebaseUser != null)
                     ListTile(
-                      leading: Icon(Icons.show_chart),
-                      title: Text('歷史膚質曲線'),
+                      leading: const Icon(Icons.show_chart),
+                      title: const Text('歷史膚質曲線'),
                       onTap: () {
                         final userId = firebaseUser.uid;
                         Navigator.pop(context);
@@ -632,8 +696,21 @@ class _HomePageState extends ConsumerState<HomePage> {
                   Card(
                     child: Padding(
                       padding: const EdgeInsets.all(12),
-                      child: _ProductTable(
-                        products: displayProducts,
+                      child: TextField(
+                        decoration: const InputDecoration(
+                          prefixIcon: Icon(Icons.search),
+                          hintText: '搜尋產品名稱或成分',
+                        ),
+                        onChanged: (value) => setState(() => _searchQuery = value),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: ProductGrid(
+                        products: filteredProducts,
                         favorites: activeFavoriteIds,
                         reviewSamples: _testingReviews,
                         onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
@@ -642,7 +719,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _AdBanner(
+                  AdMarqueeBanner(
                     hasAcneConcern: _concerns.contains('痘痘'),
                     adMessages: _activeAds,
                   ),
@@ -652,182 +729,6 @@ class _HomePageState extends ConsumerState<HomePage> {
           ),
         );
       },
-    );
-  }
-}
-
-class _ProductTable extends StatelessWidget {
-  const _ProductTable({
-    required this.products,
-    required this.favorites,
-    required this.reviewSamples,
-    required this.onToggleFavorite,
-    required this.onBuy,
-  });
-
-  final List<Product> products;
-  final Set<String> favorites;
-  final Map<String, List<String>> reviewSamples;
-  final ValueChanged<Product> onToggleFavorite;
-  final ValueChanged<Product> onBuy;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: products.take(10).map((product) {
-        final isFav = favorites.contains(product.id);
-        return Container(
-          margin: const EdgeInsets.only(bottom: 10),
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: product.isFeatured ? const Color(0xFFFFF9C4) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (product.imageUrl != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                    child: Image.network(
-                      product.imageUrl!,
-                      width: double.infinity,
-                      height: 140,
-                      fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) => Container(
-                      height: 140,
-                      color: const Color(0xFFE2E8F0),
-                      alignment: Alignment.center,
-                      child: const Text('圖片載入中'),
-                    ),
-                  ),
-                ),
-              if (product.imageUrl != null) const SizedBox(height: 8),
-              Text(
-                product.name,
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 6),
-              Wrap(
-                spacing: 10,
-                runSpacing: 4,
-                children: [
-                  Text('價格：\$${product.price.toStringAsFixed(0)}'),
-                  Text('主成分：${product.mainIngredients.join(', ')}'),
-                  Text('推薦星級：${product.rating}/3'),
-                  if (product.userScore != null && product.reviewCount != null)
-                    Text('用戶評價：${product.userScore}/5 (${product.reviewCount} 則)'),
-                ],
-              ),
-              if (reviewSamples[product.id] != null) ...[
-                const SizedBox(height: 6),
-                ...reviewSamples[product.id]!.take(2).map(
-                  (review) => Text('• $review'),
-                ),
-              ],
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  IconButton(
-                    onPressed: () => onToggleFavorite(product),
-                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
-                  ),
-                  const SizedBox(width: 8),
-                  FilledButton.tonal(
-                    onPressed: () => onBuy(product),
-                    child: const Text('購買'),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-class _AdBanner extends StatefulWidget {
-  const _AdBanner({
-    required this.hasAcneConcern,
-    required this.adMessages,
-  });
-
-  final bool hasAcneConcern;
-  final List<String> adMessages;
-
-  @override
-  State<_AdBanner> createState() => _AdBannerState();
-}
-
-class _AdBannerState extends State<_AdBanner> {
-  int _index = 0;
-  Timer? _timer;
-
-  @override
-  void initState() {
-    super.initState();
-    _startTicker();
-  }
-
-  @override
-  void didUpdateWidget(covariant _AdBanner oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (oldWidget.adMessages != widget.adMessages) {
-      _index = 0;
-      _startTicker();
-    }
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  void _startTicker() {
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 3), (_) {
-      if (!mounted || widget.adMessages.isEmpty) return;
-      setState(() {
-        _index = (_index + 1) % widget.adMessages.length;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final currentAd = widget.adMessages.isEmpty ? '暫無廣告內容' : widget.adMessages[_index];
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: widget.hasAcneConcern ? const Color(0xFFDCFCE7) : const Color(0xFFE0F2FE),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.campaign_outlined),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TweenAnimationBuilder<Offset>(
-              tween: Tween(begin: const Offset(1, 0), end: const Offset(0, 0)),
-              duration: const Duration(milliseconds: 450),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Transform.translate(
-                  offset: Offset(value.dx * 20, 0),
-                  child: child,
-                );
-              },
-              child: Text(
-                currentAd,
-                key: ValueKey<String>(currentAd),
-              ),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

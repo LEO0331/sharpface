@@ -13,8 +13,26 @@ class AdminDashboardPage extends StatefulWidget {
 
 class _AdminDashboardPageState extends State<AdminDashboardPage> {
   final _adsService = AdsService();
-  final _acneController = TextEditingController();
-  final _generalController = TextEditingController();
+  final _controllers = <String, TextEditingController>{
+    'general': TextEditingController(),
+    'acne': TextEditingController(),
+    'dryness': TextEditingController(),
+    'darkcircle': TextEditingController(),
+    'sensitive': TextEditingController(),
+    'antiaging': TextEditingController(),
+  };
+
+  final _enabled = <String, bool>{};
+  final _priority = <String, int>{};
+
+  final _poolLabels = const <String, String>{
+    'general': '一般廣告池',
+    'acne': '抗痘廣告池',
+    'dryness': '乾燥廣告池',
+    'darkcircle': '黑眼圈廣告池',
+    'sensitive': '敏感肌廣告池',
+    'antiaging': '抗老廣告池',
+  };
 
   bool _loadingAds = true;
   bool _savingAds = false;
@@ -27,19 +45,22 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   @override
   void dispose() {
-    _acneController.dispose();
-    _generalController.dispose();
+    for (final controller in _controllers.values) {
+      controller.dispose();
+    }
     super.dispose();
   }
 
   Future<void> _loadAds() async {
     try {
-      final acne = await _adsService.getPoolOnce('acne');
-      final general = await _adsService.getPoolOnce('general');
-      _acneController.text = acne.join('\n');
-      _generalController.text = general.join('\n');
+      for (final pool in _controllers.keys) {
+        final config = await _adsService.getPoolConfigOnce(pool);
+        _controllers[pool]!.text = config.messages.join('\n');
+        _enabled[pool] = config.enabled;
+        _priority[pool] = config.priority;
+      }
     } catch (_) {
-      // Keep empty text if no permission or missing docs.
+      // Keep defaults if no permission or missing docs.
     } finally {
       if (mounted) setState(() => _loadingAds = false);
     }
@@ -48,23 +69,25 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   Future<void> _saveAds() async {
     setState(() => _savingAds = true);
     try {
-      final acne = _acneController.text
-          .split('\n')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-      final general = _generalController.text
-          .split('\n')
-          .map((e) => e.trim())
-          .where((e) => e.isNotEmpty)
-          .toList();
-
-      await _adsService.savePool(pool: 'acne', messages: acne);
-      await _adsService.savePool(pool: 'general', messages: general);
+      for (final entry in _controllers.entries) {
+        final pool = entry.key;
+        final messages = entry.value.text
+            .split('\n')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+        final config = AdPoolConfig(
+          pool: pool,
+          messages: messages,
+          enabled: _enabled[pool] ?? true,
+          priority: _priority[pool] ?? 100,
+        );
+        await _adsService.savePoolConfig(config);
+      }
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('廣告池已儲存到 Firestore。')),
+        const SnackBar(content: Text('廣告池設定已儲存到 Firestore。')),
       );
     } catch (e) {
       if (!mounted) return;
@@ -124,7 +147,7 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 8),
-                        const Text('每行一則廣告文案。儲存後首頁跑馬燈會即時同步。'),
+                        const Text('可設定啟用/停用、排序權重 (越大優先)、每行一則文案。'),
                         const SizedBox(height: 12),
                         if (_loadingAds)
                           const Padding(
@@ -132,28 +155,63 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                             child: CircularProgressIndicator(),
                           )
                         else ...[
-                          TextField(
-                            controller: _acneController,
-                            maxLines: 6,
-                            decoration: const InputDecoration(
-                              labelText: '抗痘廣告池 (adConfigs/acne)',
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          const SizedBox(height: 10),
-                          TextField(
-                            controller: _generalController,
-                            maxLines: 6,
-                            decoration: const InputDecoration(
-                              labelText: '一般廣告池 (adConfigs/general)',
-                              alignLabelWithHint: true,
-                            ),
-                          ),
-                          const SizedBox(height: 12),
+                          ..._controllers.entries.map((entry) {
+                            final pool = entry.key;
+                            final label = _poolLabels[pool] ?? pool;
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(10),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: const Color(0xFFE2E8F0)),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text('$label (adConfigs/$pool)'),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: SwitchListTile(
+                                          value: _enabled[pool] ?? true,
+                                          onChanged: (value) => setState(() => _enabled[pool] = value),
+                                          contentPadding: EdgeInsets.zero,
+                                          title: const Text('啟用'),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      SizedBox(
+                                        width: 120,
+                                        child: TextFormField(
+                                          initialValue: (_priority[pool] ?? 100).toString(),
+                                          keyboardType: TextInputType.number,
+                                          decoration: const InputDecoration(
+                                            labelText: '權重',
+                                          ),
+                                          onChanged: (value) {
+                                            _priority[pool] = int.tryParse(value) ?? 0;
+                                          },
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  TextField(
+                                    controller: entry.value,
+                                    maxLines: 4,
+                                    decoration: const InputDecoration(
+                                      labelText: '廣告文案 (每行一則)',
+                                      alignLabelWithHint: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            );
+                          }),
                           FilledButton.icon(
                             onPressed: _savingAds ? null : _saveAds,
                             icon: const Icon(Icons.save_outlined),
-                            label: Text(_savingAds ? '儲存中...' : '儲存廣告池'),
+                            label: Text(_savingAds ? '儲存中...' : '儲存廣告池設定'),
                           ),
                         ],
                       ],
