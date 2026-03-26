@@ -3,6 +3,16 @@ import 'package:firebase_auth/firebase_auth.dart';
 
 import '../models/app_user.dart';
 
+class AuthFlowException implements Exception {
+  const AuthFlowException({required this.code, required this.message});
+
+  final String code;
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class AuthService {
   AuthService({FirebaseAuth? auth, FirebaseFirestore? firestore})
       : _auth = auth ?? FirebaseAuth.instance,
@@ -30,12 +40,28 @@ class AuthService {
       password: password,
     );
 
-    await _firestore.collection('users').doc(credential.user!.uid).set({
-      'email': email,
-      'phoneNumber': phoneNumber,
-      'role': 'user',
-      'createdAt': FieldValue.serverTimestamp(),
-    }, SetOptions(merge: true));
+    try {
+      await _firestore.collection('users').doc(credential.user!.uid).set({
+        'email': email,
+        'phoneNumber': phoneNumber,
+        'role': 'user',
+        'createdAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
+    } on FirebaseException catch (e) {
+      if (e.code == 'permission-denied') {
+        try {
+          await credential.user?.delete();
+        } catch (_) {
+          // Ignore rollback failures.
+        }
+        await _auth.signOut();
+        throw const AuthFlowException(
+          code: 'profile_permission_denied',
+          message: '帳號已建立，但無法寫入使用者資料。請先調整 Firestore 規則後再註冊。',
+        );
+      }
+      rethrow;
+    }
 
     return credential;
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 import '../services/auth_service.dart';
 
@@ -50,7 +51,9 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('登入失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e, isRegister: false))),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -70,10 +73,39 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
       Navigator.pop(context, true);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('註冊失敗：$e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(_friendlyError(e, isRegister: true))),
+      );
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
+  }
+
+  String _friendlyError(Object error, {required bool isRegister}) {
+    if (error is AuthFlowException) return error.message;
+
+    if (error is FirebaseAuthException) {
+      switch (error.code) {
+        case 'email-already-in-use':
+          return '此 Email 已被註冊，請改用登入。';
+        case 'invalid-email':
+          return 'Email 格式不正確。';
+        case 'weak-password':
+          return '密碼強度不足，請至少 6 碼。';
+        case 'user-not-found':
+        case 'wrong-password':
+        case 'invalid-credential':
+          return '帳號或密碼錯誤。';
+        default:
+          return (isRegister ? '註冊失敗：' : '登入失敗：') + (error.message ?? error.code);
+      }
+    }
+
+    if (error is FirebaseException && error.code == 'permission-denied') {
+      return 'Firestore 權限不足，請確認 rules 已允許使用者建立自己的 users 文件。';
+    }
+
+    return (isRegister ? '註冊失敗：' : '登入失敗：') + error.toString();
   }
 
   @override
