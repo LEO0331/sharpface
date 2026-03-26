@@ -16,6 +16,10 @@ service cloud.firestore {
         && request.resource.data.role == 'user';
       allow read, update: if isSignedIn() && request.auth.uid == userId;
       allow read: if isAdmin();
+
+      match /favorites/{favoriteId} {
+        allow read, write: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     match /products/{docId} {
