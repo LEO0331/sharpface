@@ -29,9 +29,12 @@ class ScanRecordService {
     return _firestore
         .collection('scanRecords')
         .where('userId', isEqualTo: userId)
-        .orderBy('createdAt')
         .limit(30)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map(ScanRecord.fromFirestore).toList());
+        .map((snapshot) {
+          final records = snapshot.docs.map(ScanRecord.fromFirestore).toList();
+          records.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          return records;
+        });
   }
 }

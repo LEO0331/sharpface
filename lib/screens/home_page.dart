@@ -356,16 +356,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                       title: const Text('我的最愛'),
                       subtitle: Text('已收藏 ${_favorites.length} 件'),
                     ),
-                    if (appUser != null)
+                    if (firebaseUser != null)
                       ListTile(
                         leading: Icon(Icons.show_chart),
                         title: Text('歷史膚質曲線'),
                         onTap: () {
+                          final userId = firebaseUser.uid;
                           Navigator.pop(context);
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => HistoryCurvePage(userId: firebaseUser!.uid),
+                              builder: (_) => HistoryCurvePage(userId: userId),
                             ),
                           );
                         },
