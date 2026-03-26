@@ -39,9 +39,9 @@ class ProductGrid extends StatelessWidget {
       itemCount: items.length,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.54,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        childAspectRatio: 0.55,
       ),
       itemBuilder: (context, index) {
         final product = items[index];
@@ -50,8 +50,15 @@ class ProductGrid extends StatelessWidget {
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: product.isFeatured ? const Color(0xFFFFF9C4) : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFE4E2FB)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x147A80E8),
+                blurRadius: 12,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -60,24 +67,24 @@ class ProductGrid extends StatelessWidget {
                 Semantics(
                   label: 'product-image-${product.name}',
                   child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: CachedNetworkImage(
-                    imageUrl: product.imageUrl!,
-                    width: double.infinity,
-                    height: 92,
-                    fit: BoxFit.cover,
-                    placeholder: (context, url) => Container(
+                    borderRadius: BorderRadius.circular(12),
+                    child: CachedNetworkImage(
+                      imageUrl: product.imageUrl!,
+                      width: double.infinity,
                       height: 92,
-                      color: const Color(0xFFE2E8F0),
-                    ),
-                    errorWidget: (context, url, error) => Container(
-                      height: 92,
-                      color: const Color(0xFFE2E8F0),
-                      alignment: Alignment.center,
-                      child: const Text('圖片載入中'),
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Container(
+                        height: 92,
+                        color: const Color(0xFFE2E8F0),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        height: 92,
+                        color: const Color(0xFFE2E8F0),
+                        alignment: Alignment.center,
+                        child: const Text('圖片載入中'),
+                      ),
                     ),
                   ),
-                ),
                 ),
               if (product.imageUrl != null) const SizedBox(height: 8),
               Text(
@@ -93,7 +100,16 @@ class ProductGrid extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
-              Text('推薦星級：${product.rating}/3'),
+              Row(
+                children: List.generate(
+                  3,
+                  (star) => Icon(
+                    star < product.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                    size: 15,
+                    color: const Color(0xFF6676DD),
+                  ),
+                ),
+              ),
               if (product.userScore != null && product.reviewCount != null)
                 Text('評價：${product.userScore}/5 (${product.reviewCount})'),
               if (reviewSamples[product.id] != null)
@@ -105,20 +121,27 @@ class ProductGrid extends StatelessWidget {
               const Spacer(),
               Row(
                 children: [
-                  IconButton(
+                  FilledButton.tonal(
                     onPressed: () => onToggleFavorite(product),
-                    visualDensity: VisualDensity.compact,
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
-                    icon: Icon(isFav ? Icons.favorite : Icons.favorite_border),
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size(36, 34),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    child: Icon(
+                      isFav ? Icons.favorite : Icons.favorite_border,
+                      size: 18,
+                      color: isFav ? const Color(0xFFE15D88) : null,
+                    ),
                   ),
                   const SizedBox(width: 4),
                   Expanded(
                     child: FilledButton.tonal(
                       onPressed: () => onBuy(product),
                       style: FilledButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                        minimumSize: const Size(0, 32),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                        minimumSize: const Size(0, 34),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       child: Text(buyLabel),
                     ),

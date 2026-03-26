@@ -19,10 +19,12 @@ class AdMarqueeBanner extends StatefulWidget {
 class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
   int _index = 0;
   Timer? _timer;
+  late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(viewportFraction: 0.96);
     _startTicker();
   }
 
@@ -38,6 +40,7 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
   @override
   void dispose() {
     _timer?.cancel();
+    _pageController.dispose();
     super.dispose();
   }
 
@@ -48,36 +51,115 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
       setState(() {
         _index = (_index + 1) % widget.adMessages.length;
       });
+      if (_pageController.hasClients) {
+        _pageController.animateToPage(
+          _index,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentAd = widget.adMessages.isEmpty ? '暫無廣告內容' : widget.adMessages[_index];
+    final ads = widget.adMessages.isEmpty ? const ['暫無廣告內容'] : widget.adMessages;
+    final gradientColors = widget.hasAcneConcern
+        ? const [Color(0xFFFFF3F0), Color(0xFFFFE1DE)]
+        : const [Color(0xFFEEE9FF), Color(0xFFE1EEFF)];
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(14),
-        color: widget.hasAcneConcern ? const Color(0xFFDCFCE7) : const Color(0xFFE0F2FE),
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          colors: gradientColors,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x1A7A80E8),
+            blurRadius: 16,
+            offset: Offset(0, 6),
+          ),
+        ],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.campaign_outlined),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TweenAnimationBuilder<Offset>(
-              tween: Tween(begin: const Offset(1, 0), end: const Offset(0, 0)),
-              duration: const Duration(milliseconds: 450),
-              curve: Curves.easeOut,
-              builder: (context, value, child) {
-                return Transform.translate(
-                  offset: Offset(value.dx * 20, 0),
-                  child: child,
+          Row(
+            children: [
+              const Icon(Icons.campaign_outlined),
+              const SizedBox(width: 8),
+              Text(
+                '精準推薦',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 84,
+            child: PageView.builder(
+              controller: _pageController,
+              onPageChanged: (value) => setState(() => _index = value),
+              itemCount: ads.length,
+              itemBuilder: (context, index) {
+                final ad = ads[index];
+                return Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 2),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.84),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFD9DCF8)),
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEAE7FF),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.auto_awesome_outlined, size: 20),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              ad,
+                              key: ValueKey<String>(ad),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 );
               },
-              child: Text(
-                currentAd,
-                key: ValueKey<String>(currentAd),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(
+              ads.length.clamp(1, 5),
+              (i) => AnimatedContainer(
+                duration: const Duration(milliseconds: 250),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                height: 6,
+                width: _index == i ? 16 : 6,
+                decoration: BoxDecoration(
+                  color: _index == i ? const Color(0xFF626BDA) : const Color(0xFFBFC8EE),
+                  borderRadius: BorderRadius.circular(99),
+                ),
               ),
             ),
           ),

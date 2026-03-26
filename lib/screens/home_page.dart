@@ -34,6 +34,7 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   final _random = Random();
+  final _scrollController = ScrollController();
   final _favorites = <String>{};
   final _favoriteProducts = <String, Product>{};
   final _openAI = OpenAIService(apiKey: const String.fromEnvironment('OPENAI_API_KEY'));
@@ -52,6 +53,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   final _remoteAdConfigs = <String, AdPoolConfig>{};
   bool _isPageVisible = true;
   bool _routeSubscribed = false;
+  double _scrollOffset = 0;
   String? _currentUid;
 
   bool _isAdmin = false;
@@ -154,6 +156,12 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   @override
   void initState() {
     super.initState();
+    _scrollController.addListener(() {
+      if (!mounted) return;
+      final next = _scrollController.hasClients ? _scrollController.offset : 0.0;
+      if ((next - _scrollOffset).abs() < 10) return;
+      setState(() => _scrollOffset = next);
+    });
     _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
     _loadAdCache();
     _startAdSubscriptions();
@@ -173,6 +181,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   @override
   void dispose() {
     appRouteObserver.unsubscribe(this);
+    _scrollController.dispose();
     _authStateSubscription?.cancel();
     _cloudFavoritesSubscription?.cancel();
     _stopAdSubscriptions();
@@ -646,6 +655,24 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     );
   }
 
+  Widget _buildReveal({
+    required Widget child,
+    required double triggerOffset,
+  }) {
+    final visible = _scrollOffset + 520 >= triggerOffset;
+    return AnimatedOpacity(
+      opacity: visible ? 1 : 0,
+      duration: const Duration(milliseconds: 420),
+      curve: Curves.easeOut,
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 420),
+        curve: Curves.easeOutCubic,
+        offset: visible ? Offset.zero : const Offset(0, 0.08),
+        child: child,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productProvider);
@@ -761,47 +788,60 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
             body: Container(
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFF8FAFC), Color(0xFFE2E8F0)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFF8F6FF), Color(0xFFEEF4FF), Color(0xFFF6FAFF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
               ),
               child: ListView(
+                controller: _scrollController,
                 padding: const EdgeInsets.all(16),
                 children: [
-                  TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
+                  _buildReveal(
+                    triggerOffset: 0,
+                    child: TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
+                  ),
                   const SizedBox(height: 12),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: TextField(
-                        decoration: InputDecoration(
-                          prefixIcon: Icon(Icons.search),
-                          hintText: AppStrings.of(context).t('searchProduct'),
+                  _buildReveal(
+                    triggerOffset: 110,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: TextField(
+                          decoration: InputDecoration(
+                            prefixIcon: const Icon(Icons.search),
+                            hintText: AppStrings.of(context).t('searchProduct'),
+                          ),
+                          onChanged: (value) => setState(() => _searchQuery = value),
                         ),
-                        onChanged: (value) => setState(() => _searchQuery = value),
                       ),
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Card(
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: ProductGrid(
-                        products: filteredProducts,
-                        favorites: activeFavoriteIds,
-                        reviewSamples: _testingReviews,
-                        onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
-                        onBuy: _openAffiliate,
-                        buyLabel: AppStrings.of(context).t('buy'),
-                        noProductText: AppStrings.of(context).t('noProduct'),
+                  _buildReveal(
+                    triggerOffset: 220,
+                    child: Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: ProductGrid(
+                          products: filteredProducts,
+                          favorites: activeFavoriteIds,
+                          reviewSamples: _testingReviews,
+                          onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
+                          onBuy: _openAffiliate,
+                          buyLabel: AppStrings.of(context).t('buy'),
+                          noProductText: AppStrings.of(context).t('noProduct'),
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 12),
-                  AdMarqueeBanner(
-                    hasAcneConcern: _concerns.contains('痘痘'),
-                    adMessages: _activeAds,
+                  _buildReveal(
+                    triggerOffset: 440,
+                    child: AdMarqueeBanner(
+                      hasAcneConcern: _concerns.contains('痘痘'),
+                      adMessages: _activeAds,
+                    ),
                   ),
                 ],
               ),
