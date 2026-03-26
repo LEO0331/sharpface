@@ -1,17 +1,22 @@
-# sharpface
+# 男士 AI 護膚分析儀 (SharpFace)
 
-A new Flutter project.
+Flutter + Firebase + OpenAI 的男士膚質分析應用。
 
-## Getting Started
+## Security
 
-This project is a starting point for a Flutter application.
+- API Key 使用 `--dart-define` 注入，不寫死在程式碼。
+- 本專案已在 `.gitignore` 排除 `.env*`、`google-services.json`、`GoogleService-Info.plist` 等敏感檔案。
 
-A few resources to get you started if this is your first Flutter project:
+## Run
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+```bash
+flutter pub get
+flutter run --dart-define=OPENAI_API_KEY=your_openai_api_key
+```
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Firebase 設定
+
+- 啟用 `Email/Password` 登入。
+- 啟用 `Phone` 登入（供訪客 SMS OTP 驗證）。
+- 若要測試 OTP，不發送真實簡訊可在 Firebase Console 設定：
+  `Authentication -> Sign-in method -> Phone -> Phone numbers for testing`。
