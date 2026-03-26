@@ -44,5 +44,10 @@ service cloud.firestore {
     match /adminStats/{docId} {
       allow read, write: if isAdmin();
     }
+
+    match /adConfigs/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

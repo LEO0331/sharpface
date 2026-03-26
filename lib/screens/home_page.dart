@@ -10,6 +10,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../models/product.dart';
 import '../providers/product_provider.dart';
+import '../services/ads_service.dart';
 import '../services/auth_service.dart';
 import '../services/favorite_service.dart';
 import '../services/openai_service.dart';
@@ -34,10 +35,15 @@ class _HomePageState extends ConsumerState<HomePage> {
   final _authService = AuthService();
   final _scanRecordService = ScanRecordService();
   final _favoriteService = FavoriteService();
+  final _adsService = AdsService();
   StreamSubscription<User?>? _authStateSubscription;
   StreamSubscription<List<Product>>? _cloudFavoritesSubscription;
+  StreamSubscription<List<String>>? _acneAdsSubscription;
+  StreamSubscription<List<String>>? _generalAdsSubscription;
   final _cloudFavoriteIds = <String>{};
   final _cloudFavoriteProducts = <String, Product>{};
+  List<String> _remoteAcneAds = const [];
+  List<String> _remoteGeneralAds = const [];
   bool _isAdmin = false;
 
   String _skinType = '尚未分析';
@@ -138,12 +144,26 @@ class _HomePageState extends ConsumerState<HomePage> {
   void initState() {
     super.initState();
     _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
+    _acneAdsSubscription = _adsService.watchPool('acne').listen((messages) {
+      _remoteAcneAds = messages;
+      if (mounted && _concerns.contains('痘痘')) {
+        setState(() => _activeAds = _adsByConcerns(_concerns));
+      }
+    });
+    _generalAdsSubscription = _adsService.watchPool('general').listen((messages) {
+      _remoteGeneralAds = messages;
+      if (mounted && !_concerns.contains('痘痘')) {
+        setState(() => _activeAds = _adsByConcerns(_concerns));
+      }
+    });
   }
 
   @override
   void dispose() {
     _authStateSubscription?.cancel();
     _cloudFavoritesSubscription?.cancel();
+    _acneAdsSubscription?.cancel();
+    _generalAdsSubscription?.cancel();
     super.dispose();
   }
 
@@ -405,7 +425,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 
   List<String> _adsByConcerns(List<String> concerns) {
-    final source = concerns.contains('痘痘') ? _acneAds : _generalAds;
+    final source = concerns.contains('痘痘')
+        ? (_remoteAcneAds.isNotEmpty ? _remoteAcneAds : _acneAds)
+        : (_remoteGeneralAds.isNotEmpty ? _remoteGeneralAds : _generalAds);
     final shuffled = [...source]..shuffle(_random);
     return shuffled.take(5).toList();
   }
