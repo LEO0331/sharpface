@@ -12,6 +12,9 @@ class SharpFaceApp extends StatelessWidget {
       title: '護膚分析儀',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
+      builder: (context, child) {
+        return SelectionArea(child: child ?? const SizedBox.shrink());
+      },
       home: const HomePage(),
     );
   }

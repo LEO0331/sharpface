@@ -19,7 +19,19 @@ class AdminDashboardPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
           if (snapshot.hasError) {
-            return Center(child: Text('載入失敗：${snapshot.error}'));
+            final error = snapshot.error;
+            final message = error is AdminPermissionException
+                ? error.message
+                : '載入失敗：$error';
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: SelectableText(message),
+                ),
+              ),
+            );
           }
 
           final stats = snapshot.data!;
@@ -49,7 +61,7 @@ class _MetricCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       child: ListTile(
         title: Text(title),
-        subtitle: Text(value),
+        subtitle: SelectableText(value),
       ),
     );
   }
