@@ -110,60 +110,62 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('登入 / 註冊'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [Tab(text: '登入'), Tab(text: '註冊')],
+    return SelectionArea(
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('登入 / 註冊'),
+          bottom: TabBar(
+            controller: _tabController,
+            tabs: const [Tab(text: '登入'), Tab(text: '註冊')],
+          ),
         ),
-      ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          _AuthForm(
-            submitting: _submitting,
-            fields: [
-              TextField(
-                controller: _loginEmailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _loginPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: '密碼'),
-              ),
-            ],
-            buttonText: '登入',
-            onSubmit: _login,
-          ),
-          _AuthForm(
-            submitting: _submitting,
-            fields: [
-              TextField(
-                controller: _registerEmailController,
-                keyboardType: TextInputType.emailAddress,
-                decoration: const InputDecoration(labelText: 'Email'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _registerPasswordController,
-                obscureText: true,
-                decoration: const InputDecoration(labelText: '密碼（至少 6 碼）'),
-              ),
-              const SizedBox(height: 10),
-              TextField(
-                controller: _registerPhoneController,
-                keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(labelText: '手機（選填）'),
-              ),
-            ],
-            buttonText: '註冊',
-            onSubmit: _register,
-          ),
-        ],
+        body: TabBarView(
+          controller: _tabController,
+          children: [
+            _AuthForm(
+              submitting: _submitting,
+              fields: [
+                TextField(
+                  controller: _loginEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _loginPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: '密碼'),
+                ),
+              ],
+              buttonText: '登入',
+              onSubmit: _login,
+            ),
+            _AuthForm(
+              submitting: _submitting,
+              fields: [
+                TextField(
+                  controller: _registerEmailController,
+                  keyboardType: TextInputType.emailAddress,
+                  decoration: const InputDecoration(labelText: 'Email'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _registerPasswordController,
+                  obscureText: true,
+                  decoration: const InputDecoration(labelText: '密碼（至少 6 碼）'),
+                ),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: _registerPhoneController,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(labelText: '手機（選填）'),
+                ),
+              ],
+              buttonText: '註冊',
+              onSubmit: _register,
+            ),
+          ],
+        ),
       ),
     );
   }

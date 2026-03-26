@@ -10,40 +10,42 @@ class AdminDashboardPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final service = AdminService(FirebaseFirestore.instance);
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('管理後台')),
-      body: FutureBuilder<AdminDashboardStats>(
-        future: service.fetchStats(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (snapshot.hasError) {
-            final error = snapshot.error;
-            final message = error is AdminPermissionException
-                ? error.message
-                : '載入失敗：$error';
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: SelectableText(message),
+    return SelectionArea(
+      child: Scaffold(
+        appBar: AppBar(title: const Text('管理後台')),
+        body: FutureBuilder<AdminDashboardStats>(
+          future: service.fetchStats(),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+            if (snapshot.hasError) {
+              final error = snapshot.error;
+              final message = error is AdminPermissionException
+                  ? error.message
+                  : '載入失敗：$error';
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: SelectableText(message),
+                  ),
                 ),
-              ),
-            );
-          }
+              );
+            }
 
-          final stats = snapshot.data!;
-          return ListView(
-            padding: const EdgeInsets.all(16),
-            children: [
-              _MetricCard(title: '總用戶數', value: '${stats.totalUsers}'),
-              _MetricCard(title: '今日分析次數', value: '${stats.todayScans}'),
-              _MetricCard(title: '點擊量最高產品', value: stats.topProductName),
-            ],
-          );
-        },
+            final stats = snapshot.data!;
+            return ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                _MetricCard(title: '總用戶數', value: '${stats.totalUsers}'),
+                _MetricCard(title: '今日分析次數', value: '${stats.todayScans}'),
+                _MetricCard(title: '點擊量最高產品', value: stats.topProductName),
+              ],
+            );
+          },
+        ),
       ),
     );
   }

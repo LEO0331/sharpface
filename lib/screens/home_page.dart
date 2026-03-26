@@ -333,7 +333,8 @@ class _HomePageState extends ConsumerState<HomePage> {
       stream: _authService.authStateChanges(),
       builder: (context, authSnapshot) {
         final firebaseUser = authSnapshot.data;
-        return Scaffold(
+        return SelectionArea(
+          child: Scaffold(
           drawer: StreamBuilder<AppUser?>(
             stream: _authService.watchCurrentAppUser(),
             builder: (context, snapshot) {
@@ -455,6 +456,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 _AdBanner(hasAcneConcern: _concerns.contains('痘痘')),
               ],
             ),
+          ),
           ),
         );
       },
