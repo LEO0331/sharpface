@@ -5,11 +5,15 @@ class AdminDashboardStats {
     required this.totalUsers,
     required this.todayScans,
     required this.topProductName,
+    required this.topAdMessage,
+    required this.topAdCtr,
   });
 
   final int totalUsers;
   final int todayScans;
   final String topProductName;
+  final String topAdMessage;
+  final double topAdCtr;
 }
 
 class AdminPermissionException implements Exception {
@@ -48,10 +52,24 @@ class AdminService {
           ? 'No data'
           : (topProductSnapshot.docs.first.data()['name'] as String? ?? 'No data');
 
+      final topAdSnapshot = await _firestore
+          .collection('adStats')
+          .orderBy('ctr', descending: true)
+          .limit(1)
+          .get();
+      final topAdMessage = topAdSnapshot.docs.isEmpty
+          ? 'No data'
+          : (topAdSnapshot.docs.first.data()['message'] as String? ?? 'No data');
+      final topAdCtr = topAdSnapshot.docs.isEmpty
+          ? 0.0
+          : (topAdSnapshot.docs.first.data()['ctr'] as num?)?.toDouble() ?? 0.0;
+
       return AdminDashboardStats(
         totalUsers: userSnapshot.count ?? 0,
         todayScans: todayScansSnapshot.count ?? 0,
         topProductName: topName,
+        topAdMessage: topAdMessage,
+        topAdCtr: topAdCtr,
       );
     } on FirebaseException catch (e) {
       if (e.code != 'permission-denied') rethrow;
@@ -74,6 +92,8 @@ class AdminService {
         totalUsers: (data['totalUsers'] as num?)?.toInt() ?? 0,
         todayScans: (data['todayScans'] as num?)?.toInt() ?? 0,
         topProductName: (data['topProductName'] as String?) ?? 'No data',
+        topAdMessage: (data['topAdMessage'] as String?) ?? 'No data',
+        topAdCtr: (data['topAdCtr'] as num?)?.toDouble() ?? 0.0,
       );
     } catch (_) {
       return null;

@@ -7,10 +7,14 @@ class AdMarqueeBanner extends StatefulWidget {
     super.key,
     required this.hasAcneConcern,
     required this.adMessages,
+    required this.onAdImpression,
+    required this.onAdClick,
   });
 
   final bool hasAcneConcern;
   final List<String> adMessages;
+  final ValueChanged<String> onAdImpression;
+  final ValueChanged<String> onAdClick;
 
   @override
   State<AdMarqueeBanner> createState() => _AdMarqueeBannerState();
@@ -26,6 +30,10 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
     super.initState();
     _pageController = PageController(viewportFraction: 0.96);
     _startTicker();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final firstAd = widget.adMessages.isEmpty ? '暫無廣告內容' : widget.adMessages.first;
+      widget.onAdImpression(firstAd);
+    });
   }
 
   @override
@@ -51,6 +59,7 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
       setState(() {
         _index = (_index + 1) % widget.adMessages.length;
       });
+      widget.onAdImpression(widget.adMessages[_index]);
       if (_pageController.hasClients) {
         _pageController.animateToPage(
           _index,
@@ -104,41 +113,50 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
             height: 84,
             child: PageView.builder(
               controller: _pageController,
-              onPageChanged: (value) => setState(() => _index = value),
+              onPageChanged: (value) {
+                setState(() => _index = value);
+                if (value < ads.length) {
+                  widget.onAdImpression(ads[value]);
+                }
+              },
               itemCount: ads.length,
               itemBuilder: (context, index) {
                 final ad = ads[index];
                 return Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 2),
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.84),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: const Color(0xFFD9DCF8)),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(12),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFEAE7FF),
-                              borderRadius: BorderRadius.circular(12),
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(14),
+                    onTap: () => widget.onAdClick(ad),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.84),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFD9DCF8)),
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(12),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFEAE7FF),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.auto_awesome_outlined, size: 20),
                             ),
-                            child: const Icon(Icons.auto_awesome_outlined, size: 20),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              ad,
-                              key: ValueKey<String>(ad),
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                ad,
+                                key: ValueKey<String>(ad),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                   ),

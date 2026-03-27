@@ -26,12 +26,14 @@ void main() {
             width: 430,
             child: ProductGrid(
               products: products,
+              isLoading: false,
               favorites: const {'g0'},
               reviewSamples: const {
                 'g0': ['Good result'],
               },
               onToggleFavorite: (_) {},
               onBuy: (_) {},
+              onOpenDetail: (_) {},
               buyLabel: 'Buy',
               noProductText: 'No products',
             ),

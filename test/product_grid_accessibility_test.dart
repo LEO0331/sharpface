@@ -26,15 +26,17 @@ void main() {
           home: Scaffold(
             body: SizedBox(
               width: 430,
-              child: ProductGrid(
-                products: products,
-                favorites: const {},
-                reviewSamples: const {},
-                onToggleFavorite: (_) {},
-                onBuy: (_) {},
-                buyLabel: 'Buy',
-                noProductText: 'No products',
-              ),
+                child: ProductGrid(
+                  products: products,
+                  isLoading: false,
+                  favorites: const {},
+                  reviewSamples: const {},
+                  onToggleFavorite: (_) {},
+                  onBuy: (_) {},
+                  onOpenDetail: (_) {},
+                  buyLabel: 'Buy',
+                  noProductText: 'No products',
+                ),
             ),
           ),
         ),

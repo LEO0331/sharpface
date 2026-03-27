@@ -24,6 +24,7 @@ import '../widgets/top_care_guide_card.dart';
 import 'admin_dashboard_page.dart';
 import 'auth_page.dart';
 import 'history_curve_page.dart';
+import 'product_detail_page.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -65,7 +66,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   bool _hasAnalyzed = false;
   bool _useFallbackTestingProducts = false;
   String? _guestPhoneForRecord;
+  String _activeAdPool = 'general';
   List<String> _activeAds = const ['測試廣告：男士保濕與防曬入門套組。'];
+  final Set<String> _seenAdImpressions = <String>{};
 
   static const _adPools = [
     'general',
@@ -165,6 +168,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
     _loadAdCache();
     _startAdSubscriptions();
+    _preloadFirstScreen();
     _activeAds = _adsByConcerns(_concerns);
   }
 
@@ -292,6 +296,8 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     _hasAnalyzed = false;
     _useFallbackTestingProducts = false;
     _guestPhoneForRecord = null;
+    _activeAdPool = 'general';
+    _seenAdImpressions.clear();
     _activeAds = _adsByConcerns(const []);
   }
 
@@ -497,6 +503,54 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     }
   }
 
+  void _openProductDetail(Product product) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ProductDetailPage(
+          product: product,
+          reviews: _testingReviews[product.id] ?? const [],
+          onBuy: () => _openAffiliate(product),
+        ),
+      ),
+    );
+  }
+
+  String _adTrackingUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) return user.uid;
+    final phone = _guestPhoneForRecord?.trim();
+    if (phone != null && phone.isNotEmpty) return 'guest:$phone';
+    return 'guest:anonymous';
+  }
+
+  Future<void> _trackAdImpression(String adMessage) async {
+    final key = '${_activeAdPool}_$adMessage';
+    if (_seenAdImpressions.contains(key)) return;
+    _seenAdImpressions.add(key);
+    try {
+      await _adsService.trackAdImpression(
+        pool: _activeAdPool,
+        message: adMessage,
+        userId: _adTrackingUserId(),
+      );
+    } catch (_) {
+      // Ignore analytics write failures.
+    }
+  }
+
+  Future<void> _trackAdClick(String adMessage) async {
+    try {
+      await _adsService.trackAdClick(
+        pool: _activeAdPool,
+        message: adMessage,
+        userId: _adTrackingUserId(),
+      );
+    } catch (_) {
+      // Ignore analytics write failures.
+    }
+  }
+
   Future<void> _goAuthPage() async {
     final success = await Navigator.push<bool>(
       context,
@@ -517,13 +571,32 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
     return productsAsync.when(
       data: (products) => products.isEmpty ? _testingProducts : products,
-      loading: () => _testingProducts,
+      loading: () => const [],
       error: (_, _) => _testingProducts,
     );
   }
 
+  Future<void> _preloadFirstScreen() async {
+    try {
+      final products = await ref.read(productProvider.future);
+      if (!mounted) return;
+      final firstBatch = products.take(6);
+      for (final p in firstBatch) {
+        final url = p.imageUrl;
+        if (url == null || url.isEmpty) continue;
+        await precacheImage(NetworkImage(url), context);
+      }
+
+      final generalAdPool = await _adsService.getPoolConfigOnce('general');
+      await _cache.saveJson('adConfig_general', generalAdPool.toMap());
+    } catch (_) {
+      // Preload is best-effort only.
+    }
+  }
+
   List<String> _adsByConcerns(List<String> concerns) {
     final pool = _selectAdPool(concerns);
+    _activeAdPool = pool;
     final config = _remoteAdConfigs[pool];
     final source = (config != null && config.enabled && config.messages.isNotEmpty)
         ? config.messages
@@ -677,6 +750,8 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(productProvider);
     final displayProducts = _resolveProducts(productsAsync);
+    final showProductSkeleton =
+        _hasAnalyzed && !_useFallbackTestingProducts && productsAsync.isLoading;
     final filteredProducts = displayProducts.where((product) {
       if (_searchQuery.trim().isEmpty) return true;
       final q = _searchQuery.trim().toLowerCase();
@@ -825,10 +900,12 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                         padding: const EdgeInsets.all(12),
                         child: ProductGrid(
                           products: filteredProducts,
+                          isLoading: showProductSkeleton,
                           favorites: activeFavoriteIds,
                           reviewSamples: _testingReviews,
                           onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
                           onBuy: _openAffiliate,
+                          onOpenDetail: _openProductDetail,
                           buyLabel: AppStrings.of(context).t('buy'),
                           noProductText: AppStrings.of(context).t('noProduct'),
                         ),
@@ -841,6 +918,13 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     child: AdMarqueeBanner(
                       hasAcneConcern: _concerns.contains('痘痘'),
                       adMessages: _activeAds,
+                      onAdImpression: _trackAdImpression,
+                      onAdClick: (message) {
+                        _trackAdClick(message);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('已記錄廣告點擊：$message')),
+                        );
+                      },
                     ),
                   ),
                 ],

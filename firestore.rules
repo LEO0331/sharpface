@@ -57,5 +57,22 @@ service cloud.firestore {
     match /adConfigDrafts/{docId} {
       allow read, write: if isAdmin();
     }
+
+    match /adEvents/{docId} {
+      allow create: if request.resource.data.keys().hasAll(
+        ['adId', 'pool', 'message', 'type', 'userId', 'createdAt']
+      )
+      && request.resource.data.type in ['impression', 'click'];
+      allow read: if isAdmin();
+      allow update, delete: if false;
+    }
+
+    match /adStats/{docId} {
+      allow read: if isAdmin();
+      allow create, update: if request.resource.data.keys().hasAll(
+        ['pool', 'message', 'impressions', 'clicks', 'ctr']
+      );
+      allow delete: if isAdmin();
+    }
   }
 }

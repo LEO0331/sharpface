@@ -226,6 +226,10 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 _MetricCard(title: '總用戶數', value: '${stats.totalUsers}'),
                 _MetricCard(title: '今日分析次數', value: '${stats.todayScans}'),
                 _MetricCard(title: '點擊量最高產品', value: stats.topProductName),
+                _MetricCard(
+                  title: '最高 CTR 廣告',
+                  value: '${stats.topAdMessage}\nCTR ${(stats.topAdCtr * 100).toStringAsFixed(1)}%',
+                ),
                 const SizedBox(height: 8),
                 Card(
                   child: Padding(
