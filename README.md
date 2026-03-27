@@ -26,3 +26,4 @@ flutter run --dart-define=OPENAI_API_KEY=your_openai_api_key
 flutter test
 flutter test --coverage
 ```
+

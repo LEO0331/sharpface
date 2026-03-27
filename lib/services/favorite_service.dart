@@ -20,7 +20,7 @@ class FavoriteService {
         .doc(uid)
         .collection('favorites')
         .snapshots()
-        .map((snapshot) {
+        .asyncMap((snapshot) async {
       final products = snapshot.docs.map((doc) {
         final data = doc.data();
         return Product(
@@ -45,15 +45,14 @@ class FavoriteService {
             },
           )
           .toList();
-      _cache.saveIfChanged('favorites_$uid', payload).then((changed) {
-        if (changed) {
-          _cache.saveJsonWithTtl(
-            key: 'favorites_$uid',
-            value: payload,
-            ttl: _cacheTtl,
-          );
-        }
-      });
+      final changed = await _cache.saveIfChanged('favorites_$uid', payload);
+      if (changed) {
+        await _cache.saveJsonWithTtl(
+          key: 'favorites_$uid',
+          value: payload,
+          ttl: _cacheTtl,
+        );
+      }
       return products;
     });
     return stream;
