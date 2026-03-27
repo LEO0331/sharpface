@@ -6,12 +6,16 @@ class AdPoolConfig {
     required this.messages,
     required this.enabled,
     required this.priority,
+    this.startAt,
+    this.endAt,
   });
 
   final String pool;
   final List<String> messages;
   final bool enabled;
   final int priority;
+  final DateTime? startAt;
+  final DateTime? endAt;
 
   factory AdPoolConfig.fromDoc(String pool, Map<String, dynamic>? data) {
     final rawMessages = data?['messages'];
@@ -23,6 +27,8 @@ class AdPoolConfig {
       messages: messages,
       enabled: (data?['enabled'] as bool?) ?? true,
       priority: (data?['priority'] as num?)?.toInt() ?? 100,
+      startAt: _toDateTime(data?['startAt']),
+      endAt: _toDateTime(data?['endAt']),
     );
   }
 
@@ -31,8 +37,24 @@ class AdPoolConfig {
       'messages': messages,
       'enabled': enabled,
       'priority': priority,
+      'startAt': startAt != null ? Timestamp.fromDate(startAt!) : null,
+      'endAt': endAt != null ? Timestamp.fromDate(endAt!) : null,
       'updatedAt': FieldValue.serverTimestamp(),
     };
+  }
+
+  bool isActiveAt(DateTime now) {
+    if (!enabled) return false;
+    if (startAt != null && now.isBefore(startAt!)) return false;
+    if (endAt != null && now.isAfter(endAt!)) return false;
+    return true;
+  }
+
+  static DateTime? _toDateTime(dynamic value) {
+    if (value is Timestamp) return value.toDate();
+    if (value is DateTime) return value;
+    if (value is String) return DateTime.tryParse(value);
+    return null;
   }
 }
 
@@ -82,6 +104,8 @@ class AdsService {
         'messages': current.messages,
         'enabled': current.enabled,
         'priority': current.priority,
+        'startAt': current.startAt != null ? Timestamp.fromDate(current.startAt!) : null,
+        'endAt': current.endAt != null ? Timestamp.fromDate(current.endAt!) : null,
         'createdAt': FieldValue.serverTimestamp(),
       });
     });

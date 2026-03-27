@@ -12,6 +12,7 @@ class FavoriteService {
 
   final FirebaseFirestore _firestore;
   final LocalCacheService _cache;
+  static const Duration _cacheTtl = Duration(minutes: 10);
 
   Stream<List<Product>> watchFavorites(String uid) {
     final stream = _firestore
@@ -36,24 +37,30 @@ class FavoriteService {
           reviewCount: (data['reviewCount'] as num?)?.toInt(),
         );
       }).toList();
-      _cache.saveJson(
-        'favorites_$uid',
-        products
-            .map(
-              (e) => {
-                'id': e.id,
-                ...e.toFirestore(),
-              },
-            )
-            .toList(),
-      );
+      final payload = products
+          .map(
+            (e) => {
+              'id': e.id,
+              ...e.toFirestore(),
+            },
+          )
+          .toList();
+      _cache.saveIfChanged('favorites_$uid', payload).then((changed) {
+        if (changed) {
+          _cache.saveJsonWithTtl(
+            key: 'favorites_$uid',
+            value: payload,
+            ttl: _cacheTtl,
+          );
+        }
+      });
       return products;
     });
     return stream;
   }
 
   Future<List<Product>> readCachedFavorites(String uid) async {
-    final list = await _cache.readJsonList('favorites_$uid');
+    final list = await _cache.readFreshJsonList('favorites_$uid');
     if (list == null) return const [];
     return list.whereType<Map>().map((raw) {
       final data = Map<String, dynamic>.from(raw);

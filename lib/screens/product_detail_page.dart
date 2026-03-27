@@ -8,11 +8,17 @@ class ProductDetailPage extends StatelessWidget {
     super.key,
     required this.product,
     required this.reviews,
+    required this.similarProducts,
+    required this.recentProducts,
+    required this.onOpenProduct,
     required this.onBuy,
   });
 
   final Product product;
   final List<String> reviews;
+  final List<Product> similarProducts;
+  final List<Product> recentProducts;
+  final ValueChanged<Product> onOpenProduct;
   final VoidCallback onBuy;
 
   @override
@@ -92,11 +98,75 @@ class ProductDetailPage extends StatelessWidget {
                 ),
               ),
             ),
+            if (similarProducts.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _MiniProductSection(
+                title: '相似商品',
+                products: similarProducts,
+                onOpenProduct: onOpenProduct,
+              ),
+            ],
+            if (recentProducts.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              _MiniProductSection(
+                title: '最近看過',
+                products: recentProducts,
+                onOpenProduct: onOpenProduct,
+              ),
+            ],
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: onBuy,
               icon: const Icon(Icons.shopping_bag_outlined),
               label: const Text('前往購買'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniProductSection extends StatelessWidget {
+  const _MiniProductSection({
+    required this.title,
+    required this.products,
+    required this.onOpenProduct,
+  });
+
+  final String title;
+  final List<Product> products;
+  final ValueChanged<Product> onOpenProduct;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            ...products.take(4).map(
+              (item) => ListTile(
+                contentPadding: EdgeInsets.zero,
+                onTap: () => onOpenProduct(item),
+                leading: item.imageUrl == null
+                    ? const Icon(Icons.inventory_2_outlined)
+                    : ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: CachedNetworkImage(
+                          imageUrl: item.imageUrl!,
+                          width: 44,
+                          height: 44,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                title: Text(item.name, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text('\$${item.price.toStringAsFixed(0)}'),
+                trailing: const Icon(Icons.chevron_right),
+              ),
             ),
           ],
         ),

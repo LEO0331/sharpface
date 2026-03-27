@@ -54,6 +54,9 @@ void main() {
     expect(find.text('7 天'), findsOneWidget);
     expect(find.text('30 天'), findsOneWidget);
     expect(find.text('全部'), findsOneWidget);
+
+    await tester.tap(find.text('30 天'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('近 2 次膚況趨勢'), findsOneWidget);
   });
 

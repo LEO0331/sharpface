@@ -69,6 +69,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   String _activeAdPool = 'general';
   List<String> _activeAds = const ['測試廣告：男士保濕與防曬入門套組。'];
   final Set<String> _seenAdImpressions = <String>{};
+  final List<String> _recentViewedIds = <String>[];
+  final Map<String, Product> _lastRenderedProducts = <String, Product>{};
+  static const _cacheTtl = Duration(minutes: 10);
 
   static const _adPools = [
     'general',
@@ -252,7 +255,15 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     for (final pool in _adPools) {
       final sub = _adsService.watchPoolConfig(pool).listen((config) {
         _remoteAdConfigs[pool] = config;
-        _cache.saveJson('adConfig_$pool', config.toMap());
+        _cache.saveIfChanged('adConfig_$pool', config.toMap()).then((changed) {
+          if (changed) {
+            _cache.saveJsonWithTtl(
+              key: 'adConfig_$pool',
+              value: config.toMap(),
+              ttl: _cacheTtl,
+            );
+          }
+        });
         if (mounted) setState(() => _activeAds = _adsByConcerns(_concerns));
       });
       _adPoolSubscriptions.add(sub);
@@ -268,11 +279,15 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
   Future<void> _loadAdCache() async {
     for (final pool in _adPools) {
-      final data = await _cache.readJsonMap('adConfig_$pool');
+      final data = await _cache.readFreshJsonMap('adConfig_$pool');
       if (data != null) {
         _remoteAdConfigs[pool] = AdPoolConfig.fromDoc(pool, data);
       }
     }
+    final recentIds = await _cache.readFreshJsonList('recent_viewed_ids');
+    _recentViewedIds
+      ..clear()
+      ..addAll((recentIds ?? const <dynamic>[]).whereType<String>());
     if (mounted) setState(() {});
   }
 
@@ -504,16 +519,75 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   }
 
   void _openProductDetail(Product product) {
+    _rememberViewed(product.id);
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => ProductDetailPage(
           product: product,
           reviews: _testingReviews[product.id] ?? const [],
+          similarProducts: _similarProducts(product),
+          recentProducts: _recentProducts(excludeId: product.id),
+          onOpenProduct: _openProductDetail,
           onBuy: () => _openAffiliate(product),
         ),
       ),
     );
+  }
+
+  void _rememberViewed(String productId) {
+    _recentViewedIds.remove(productId);
+    _recentViewedIds.insert(0, productId);
+    if (_recentViewedIds.length > 12) {
+      _recentViewedIds.removeRange(12, _recentViewedIds.length);
+    }
+    _cache.saveJsonWithTtl(
+      key: 'recent_viewed_ids',
+      value: _recentViewedIds,
+      ttl: _cacheTtl,
+    );
+  }
+
+  List<Product> _similarProducts(Product base) {
+    final all = {
+      ..._favoriteProducts,
+      ..._cloudFavoriteProducts,
+      ..._lastRenderedProducts,
+    };
+    for (final p in _staticProducts) {
+      all[p.id] = p;
+    }
+    for (final p in _testingProducts) {
+      all[p.id] = p;
+    }
+    final candidates = all.values.where((p) => p.id != base.id).toList();
+    candidates.sort((a, b) {
+      final scoreA = _similarityScore(base, a);
+      final scoreB = _similarityScore(base, b);
+      return scoreB.compareTo(scoreA);
+    });
+    return candidates.take(4).toList();
+  }
+
+  int _similarityScore(Product a, Product b) {
+    final shared = a.mainIngredients.where((i) => b.mainIngredients.contains(i)).length;
+    final ratingGap = (a.rating - b.rating).abs();
+    return shared * 10 - ratingGap;
+  }
+
+  List<Product> _recentProducts({String? excludeId}) {
+    final all = <String, Product>{
+      for (final p in _staticProducts) p.id: p,
+      for (final p in _testingProducts) p.id: p,
+      ..._favoriteProducts,
+      ..._cloudFavoriteProducts,
+    };
+    return _recentViewedIds
+        .where((id) => id != excludeId)
+        .map((id) => all[id])
+        .whereType<Product>()
+        .take(4)
+        .toList();
   }
 
   String _adTrackingUserId() {
@@ -588,7 +662,11 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       }
 
       final generalAdPool = await _adsService.getPoolConfigOnce('general');
-      await _cache.saveJson('adConfig_general', generalAdPool.toMap());
+      await _cache.saveJsonWithTtl(
+        key: 'adConfig_general',
+        value: generalAdPool.toMap(),
+        ttl: _cacheTtl,
+      );
     } catch (_) {
       // Preload is best-effort only.
     }
@@ -598,7 +676,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     final pool = _selectAdPool(concerns);
     _activeAdPool = pool;
     final config = _remoteAdConfigs[pool];
-    final source = (config != null && config.enabled && config.messages.isNotEmpty)
+    final source = (config != null && config.isActiveAt(DateTime.now()) && config.messages.isNotEmpty)
         ? config.messages
         : _fallbackAdsByPool(pool);
     final shuffled = [...source]..shuffle(_random);
@@ -618,7 +696,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
     for (final pool in candidates) {
       final config = _remoteAdConfigs[pool];
-      final enabled = config?.enabled ?? true;
+      final enabled = config?.isActiveAt(DateTime.now()) ?? true;
       if (!enabled) continue;
       final priority = config?.priority ?? (pool == 'general' ? 10 : 100);
       if (priority > selectedPriority) {
@@ -758,6 +836,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       return product.name.toLowerCase().contains(q) ||
           product.mainIngredients.any((i) => i.toLowerCase().contains(q));
     }).toList();
+    _lastRenderedProducts
+      ..clear()
+      ..addEntries(filteredProducts.map((e) => MapEntry(e.id, e)));
 
     return StreamBuilder<User?>(
       stream: _authService.authStateChanges(),

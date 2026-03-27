@@ -24,6 +24,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
 
   final _enabled = <String, bool>{};
   final _priority = <String, int>{};
+  final _startAt = <String, DateTime?>{};
+  final _endAt = <String, DateTime?>{};
 
   final _poolLabels = const <String, String>{
     'general': '一般廣告池',
@@ -60,6 +62,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         _controllers[pool]!.text = source.messages.join('\n');
         _enabled[pool] = source.enabled;
         _priority[pool] = source.priority;
+        _startAt[pool] = source.startAt;
+        _endAt[pool] = source.endAt;
       }
     } catch (_) {
       // Keep defaults if no permission or missing docs.
@@ -75,11 +79,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
+    final start = _startAt[pool];
+    final end = _endAt[pool];
+    final normalizedEnd = (start != null && end != null && end.isBefore(start)) ? null : end;
     return AdPoolConfig(
       pool: pool,
       messages: messages,
       enabled: _enabled[pool] ?? true,
       priority: _priority[pool] ?? 100,
+      startAt: start,
+      endAt: normalizedEnd,
     );
   }
 
@@ -138,6 +147,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
               children: [
                 Text('Enabled: ${config.enabled}'),
                 Text('Priority: ${config.priority}'),
+                Text('StartAt: ${config.startAt?.toIso8601String() ?? '-'}'),
+                Text('EndAt: ${config.endAt?.toIso8601String() ?? '-'}'),
                 const SizedBox(height: 10),
                 ...config.messages.map((m) => Text('• $m')),
               ],
@@ -180,6 +191,8 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                 _controllers[pool]!.text = item.messages.join('\n');
                 _enabled[pool] = item.enabled;
                 _priority[pool] = item.priority;
+                _startAt[pool] = item.startAt;
+                _endAt[pool] = item.endAt;
                 setState(() {});
                 Navigator.pop(context);
               },
@@ -296,6 +309,40 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
                                       labelText: '廣告文案 (每行一則)',
                                       alignLabelWithHint: true,
                                     ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: TextFormField(
+                                          initialValue: _startAt[pool]?.toIso8601String() ?? '',
+                                          decoration: const InputDecoration(
+                                            labelText: '開始時間 (ISO8601)',
+                                            hintText: '2026-03-27T09:00:00',
+                                          ),
+                                          onChanged: (value) {
+                                            _startAt[pool] = value.trim().isEmpty
+                                                ? null
+                                                : DateTime.tryParse(value.trim());
+                                          },
+                                        ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: TextFormField(
+                                          initialValue: _endAt[pool]?.toIso8601String() ?? '',
+                                          decoration: const InputDecoration(
+                                            labelText: '結束時間 (ISO8601)',
+                                            hintText: '2026-03-28T00:00:00',
+                                          ),
+                                          onChanged: (value) {
+                                            _endAt[pool] = value.trim().isEmpty
+                                                ? null
+                                                : DateTime.tryParse(value.trim());
+                                          },
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                   const SizedBox(height: 8),
                                   Wrap(

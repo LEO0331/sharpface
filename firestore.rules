@@ -10,6 +10,13 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
 
+    function validAdPoolDoc() {
+      return request.resource.data.keys().hasAll(['messages', 'enabled', 'priority'])
+        && request.resource.data.priority is int
+        && request.resource.data.priority >= 0
+        && request.resource.data.priority <= 10000;
+    }
+
     match /users/{userId} {
       allow create: if isSignedIn()
         && request.auth.uid == userId
@@ -47,7 +54,7 @@ service cloud.firestore {
 
     match /adConfigs/{docId} {
       allow read: if true;
-      allow write: if isAdmin();
+      allow write: if isAdmin() && validAdPoolDoc();
 
       match /history/{historyId} {
         allow read, write: if isAdmin();
@@ -55,23 +62,48 @@ service cloud.firestore {
     }
 
     match /adConfigDrafts/{docId} {
-      allow read, write: if isAdmin();
+      allow read, write: if isAdmin() && validAdPoolDoc();
     }
 
     match /adEvents/{docId} {
       allow create: if request.resource.data.keys().hasAll(
         ['adId', 'pool', 'message', 'type', 'userId', 'createdAt']
       )
-      && request.resource.data.type in ['impression', 'click'];
+      && request.resource.data.type in ['impression', 'click']
+      && request.resource.data.pool is string
+      && request.resource.data.message is string
+      && request.resource.data.userId is string
+      && request.resource.data.message.size() <= 200;
       allow read: if isAdmin();
       allow update, delete: if false;
     }
 
     match /adStats/{docId} {
       allow read: if isAdmin();
-      allow create, update: if request.resource.data.keys().hasAll(
+      allow create: if request.resource.data.keys().hasAll(
         ['pool', 'message', 'impressions', 'clicks', 'ctr']
-      );
+      )
+      && request.resource.data.impressions is int
+      && request.resource.data.clicks is int
+      && request.resource.data.impressions >= 0
+      && request.resource.data.clicks >= 0
+      && request.resource.data.ctr is number
+      && request.resource.data.ctr >= 0
+      && request.resource.data.ctr <= 1;
+      allow update: if request.resource.data.keys().hasAll(
+        ['pool', 'message', 'impressions', 'clicks', 'ctr']
+      )
+      && request.resource.data.pool == resource.data.pool
+      && request.resource.data.message == resource.data.message
+      && request.resource.data.impressions is int
+      && request.resource.data.clicks is int
+      && request.resource.data.impressions >= resource.data.impressions
+      && request.resource.data.clicks >= resource.data.clicks
+      && request.resource.data.impressions <= resource.data.impressions + 1
+      && request.resource.data.clicks <= resource.data.clicks + 1
+      && request.resource.data.ctr is number
+      && request.resource.data.ctr >= 0
+      && request.resource.data.ctr <= 1;
       allow delete: if isAdmin();
     }
   }
