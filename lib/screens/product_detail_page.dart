@@ -26,6 +26,14 @@ class ProductDetailPage extends StatelessWidget {
     return SelectionArea(
       child: Scaffold(
         appBar: AppBar(title: Text(product.name)),
+        bottomNavigationBar: SafeArea(
+          minimum: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          child: FilledButton.icon(
+            onPressed: onBuy,
+            icon: const Icon(Icons.shopping_bag_outlined),
+            label: const Text('前往購買'),
+          ),
+        ),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: [
@@ -74,6 +82,16 @@ class ProductDetailPage extends StatelessWidget {
                     ),
                     if (product.userScore != null && product.reviewCount != null)
                       Text('使用者評分：${product.userScore}/5（${product.reviewCount} 則）'),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: const [
+                        _TrustChip(label: '官方導購連結'),
+                        _TrustChip(label: '價格透明'),
+                        _TrustChip(label: '可收藏追蹤'),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -114,15 +132,29 @@ class ProductDetailPage extends StatelessWidget {
                 onOpenProduct: onOpenProduct,
               ),
             ],
-            const SizedBox(height: 12),
-            FilledButton.icon(
-              onPressed: onBuy,
-              icon: const Icon(Icons.shopping_bag_outlined),
-              label: const Text('前往購買'),
-            ),
+            const SizedBox(height: 80),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _TrustChip extends StatelessWidget {
+  const _TrustChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F4FF),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: const Color(0xFFD8DDF6)),
+      ),
+      child: Text(label, style: Theme.of(context).textTheme.bodySmall),
     );
   }
 }

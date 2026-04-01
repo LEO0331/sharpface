@@ -21,6 +21,7 @@ void main() {
   });
 
   testWidgets('shows chips and trend title for records', (tester) async {
+    final now = DateTime.now();
     final records = [
       ScanRecord(
         id: 's1',
@@ -28,7 +29,7 @@ void main() {
         skinType: '混合肌',
         suggestion: '保濕',
         concerns: const ['痘痘'],
-        createdAt: DateTime(2026, 3, 20),
+        createdAt: now.subtract(const Duration(days: 2)),
       ),
       ScanRecord(
         id: 's2',
@@ -36,7 +37,7 @@ void main() {
         skinType: '油性肌',
         suggestion: '控油',
         concerns: const ['黑眼圈', '痘痘'],
-        createdAt: DateTime(2026, 3, 22),
+        createdAt: now.subtract(const Duration(days: 1)),
       ),
     ];
 

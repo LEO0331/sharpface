@@ -2,6 +2,9 @@
 
 Flutter + Firebase + OpenAI 的男士膚質分析 App。
 
+## v1 上線檢查表
+- [v1-launch-checklist.md](docs/v1-launch-checklist.md)
+
 ## 功能
 - AI 膚質分析（GPT Vision，JSON 結構化輸出）
 - Email/Password 註冊登入
@@ -27,3 +30,7 @@ flutter test
 flutter test --coverage
 ```
 
+## 安全基線檢查（本機）
+```bash
+bash tool/security_check.sh
+```

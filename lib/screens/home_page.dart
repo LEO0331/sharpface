@@ -20,6 +20,7 @@ import '../services/openai_service.dart';
 import '../services/scan_record_service.dart';
 import '../widgets/home/ad_marquee_banner.dart';
 import '../widgets/home/product_grid.dart';
+import '../widgets/home/quick_routine_card.dart';
 import '../widgets/top_care_guide_card.dart';
 import 'admin_dashboard_page.dart';
 import 'auth_page.dart';
@@ -72,6 +73,7 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   final List<String> _recentViewedIds = <String>[];
   final Map<String, Product> _lastRenderedProducts = <String, Product>{};
   static const _cacheTtl = Duration(minutes: 10);
+  BudgetTier _selectedBudget = BudgetTier.balanced;
 
   static const _adPools = [
     'general',
@@ -957,6 +959,19 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
                     triggerOffset: 0,
                     child: TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
                   ),
+                  if (_hasAnalyzed) ...[
+                    const SizedBox(height: 12),
+                    _buildReveal(
+                      triggerOffset: 60,
+                      child: QuickRoutineCard(
+                        skinType: _skinType,
+                        concerns: _concerns,
+                        suggestion: _suggestion,
+                        selectedBudget: _selectedBudget,
+                        onBudgetChanged: (tier) => setState(() => _selectedBudget = tier),
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: 12),
                   _buildReveal(
                     triggerOffset: 110,
