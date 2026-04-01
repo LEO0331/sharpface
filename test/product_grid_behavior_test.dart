@@ -81,4 +81,34 @@ void main() {
     await tester.pumpAndSettle();
     expect(bought?.id, 'p1');
   });
+
+  testWidgets('shows 3 review lines per card with fallback text', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 800,
+            child: ProductGrid(
+              products: const [product],
+              isLoading: false,
+              favorites: const {},
+              reviewSamples: const {
+                'p1': ['清爽不黏膩'],
+              },
+              onToggleFavorite: (_) {},
+              onBuy: (_) {},
+              onOpenDetail: (_) {},
+              buyLabel: 'Buy',
+              noProductText: 'No products',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byWidgetPredicate((widget) {
+      return widget is Text && widget.data != null && widget.data!.startsWith('• ');
+    }), findsNWidgets(3));
+  });
 }

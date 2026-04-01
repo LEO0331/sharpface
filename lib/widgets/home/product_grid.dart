@@ -43,8 +43,12 @@ class ProductGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final imageHeight = crossAxisCount == 3 ? 96.0 : 108.0;
-        final aspectRatio = crossAxisCount == 3 ? 0.90 : 0.78;
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final isLargeText = textScale > 1.2;
+        final imageHeight = crossAxisCount == 3 ? 96.0 : 90.0;
+        final aspectRatio = isLargeText
+            ? (crossAxisCount == 3 ? 0.70 : 0.56)
+            : (crossAxisCount == 3 ? 0.82 : 0.66);
 
         return GridView.builder(
           shrinkWrap: true,
@@ -62,7 +66,7 @@ class ProductGrid extends StatelessWidget {
               product: product,
               isFav: favorites.contains(product.id),
               imageHeight: imageHeight,
-              review: reviewSamples[product.id]?.first,
+              reviews: reviewSamples[product.id] ?? const [],
               buyLabel: buyLabel,
               onOpenDetail: () => onOpenDetail(product),
               onToggleFavorite: () => onToggleFavorite(product),
@@ -84,7 +88,11 @@ class _ProductGridSkeleton extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final aspectRatio = crossAxisCount == 3 ? 0.90 : 0.78;
+        final textScale = MediaQuery.textScalerOf(context).scale(1);
+        final isLargeText = textScale > 1.2;
+        final aspectRatio = isLargeText
+            ? (crossAxisCount == 3 ? 0.70 : 0.56)
+            : (crossAxisCount == 3 ? 0.82 : 0.66);
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -177,14 +185,14 @@ class _ProductCard extends StatefulWidget {
     required this.onOpenDetail,
     required this.onToggleFavorite,
     required this.onBuy,
-    this.review,
+    this.reviews = const [],
   });
 
   final Product product;
   final bool isFav;
   final double imageHeight;
   final String buyLabel;
-  final String? review;
+  final List<String> reviews;
   final VoidCallback onOpenDetail;
   final VoidCallback onToggleFavorite;
   final VoidCallback onBuy;
@@ -225,15 +233,29 @@ class _ProductCardState extends State<_ProductCard> {
     return '日常保養';
   }
 
-  String _userDescription(Product product) {
-    if (widget.review != null && widget.review!.trim().isNotEmpty) {
-      return widget.review!;
+  List<String> _reviewLines(Product product) {
+    final source = widget.reviews
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .take(3)
+        .toList();
+    if (source.length == 3) return source;
+
+    final score = product.userScore ?? 4.2;
+    final fallback = <String>[
+      if (score >= 4.6) '吸收快、連續使用有感改善。',
+      if (score >= 4.3) '質地清爽不厚重，日常好搭配。',
+      '刺激感低，敏感時期也能穩定使用。',
+      '價格與效果平衡，整體 CP 值不錯。',
+      '香味與觸感自然，持續使用意願高。',
+    ];
+
+    final merged = [...source];
+    for (final line in fallback) {
+      if (merged.length >= 3) break;
+      if (!merged.contains(line)) merged.add(line);
     }
-    final score = product.userScore;
-    if (score != null && score >= 4.6) return '多數使用者回饋：短期有感、會回購。';
-    if (score != null && score >= 4.2) return '多數使用者回饋：質地舒適，日常使用穩定。';
-    if (score != null) return '多數使用者回饋：溫和不刺激，需持續使用。';
-    return '使用者回饋：日常保養友善，適合入門。';
+    return merged.take(3).toList();
   }
 
   @override
@@ -251,8 +273,7 @@ class _ProductCardState extends State<_ProductCard> {
             .clamp(84.0, 150.0)
             .toDouble())
         : effectiveImageHeight;
-    final compactInfoBlock =
-        product.imageUrl != null && product.userScore == null && widget.review == null;
+    final reviewLines = _reviewLines(product);
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -409,13 +430,16 @@ class _ProductCardState extends State<_ProductCard> {
                     '評價 ${product.userScore}/5 (${product.reviewCount})',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                if (!compactMode && !compactInfoBlock)
-                  Text(
-                    '• ${_userDescription(product)}',
+                ...reviewLines.map(
+                  (line) => Text(
+                    '• $line',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          fontSize: compactMode ? 10.5 : null,
+                        ),
                   ),
+                ),
                 SizedBox(height: compactMode ? 2 : 4),
                 Align(
                   alignment: Alignment.centerLeft,
@@ -441,10 +465,7 @@ class _ProductCardState extends State<_ProductCard> {
                     ),
                   ),
                 ),
-                if (compactInfoBlock)
-                  const SizedBox(height: 6)
-                else
-                  const Spacer(),
+                const Spacer(),
                 Row(
                   children: [
                     _LuxuryIconButton(
