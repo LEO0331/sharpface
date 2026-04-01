@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
+import '../core/theme/design_tokens.dart';
 import '../models/product.dart';
 import '../services/price_alert_service.dart';
 
@@ -128,7 +129,12 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
       child: Scaffold(
         appBar: AppBar(title: Text(widget.product.name)),
         bottomNavigationBar: SafeArea(
-          minimum: const EdgeInsets.fromLTRB(12, 8, 12, 12),
+          minimum: const EdgeInsets.fromLTRB(
+            AppTokens.space3,
+            AppTokens.space2,
+            AppTokens.space3,
+            AppTokens.space3,
+          ),
           child: FilledButton.icon(
             onPressed: widget.onBuy,
             icon: const Icon(Icons.shopping_bag_outlined),
@@ -142,7 +148,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
               Hero(
                 tag: 'product-image-${widget.product.id}',
                 child: ClipRRect(
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLg),
                   child: CachedNetworkImage(
                     imageUrl: widget.product.imageUrl!,
                     height: 220,
@@ -155,7 +161,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
                 height: 220,
                 decoration: BoxDecoration(
                   color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLg),
                 ),
                 alignment: Alignment.center,
                 child: const Icon(Icons.image_outlined, size: 36),
@@ -163,7 +169,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(height: 14),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppTokens.space3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -217,7 +223,7 @@ class _ProductDetailPageState extends State<ProductDetailPage> {
             const SizedBox(height: 10),
             Card(
               child: Padding(
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.all(AppTokens.space3),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -269,7 +275,7 @@ class _TrustChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: const Color(0xFFF2F4FF),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
         border: Border.all(color: const Color(0xFFD8DDF6)),
       ),
       child: Text(label, style: Theme.of(context).textTheme.bodySmall),
@@ -292,7 +298,7 @@ class _MiniProductSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(AppTokens.space3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

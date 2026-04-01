@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/theme/design_tokens.dart';
 import '../../models/product.dart';
 
 class ProductGrid extends StatelessWidget {
@@ -30,12 +31,10 @@ class ProductGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = products.take(10).toList();
-    if (isLoading) {
-      return const _ProductGridSkeleton();
-    }
+    if (isLoading) return const _ProductGridSkeleton();
     if (items.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppTokens.space4),
         child: Text(noProductText),
       );
     }
@@ -53,16 +52,15 @@ class ProductGrid extends StatelessWidget {
           itemCount: items.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppTokens.space3,
+            mainAxisSpacing: AppTokens.space3,
             childAspectRatio: aspectRatio,
           ),
           itemBuilder: (context, index) {
             final product = items[index];
-            final isFav = favorites.contains(product.id);
             return _ProductCard(
               product: product,
-              isFav: isFav,
+              isFav: favorites.contains(product.id),
               imageHeight: imageHeight,
               review: reviewSamples[product.id]?.first,
               buyLabel: buyLabel,
@@ -93,8 +91,8 @@ class _ProductGridSkeleton extends StatelessWidget {
           itemCount: crossAxisCount * 2,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: crossAxisCount,
-            crossAxisSpacing: 12,
-            mainAxisSpacing: 12,
+            crossAxisSpacing: AppTokens.space3,
+            mainAxisSpacing: AppTokens.space3,
             childAspectRatio: aspectRatio,
           ),
           itemBuilder: (context, index) => const _SkeletonCard(),
@@ -138,8 +136,8 @@ class _SkeletonCardState extends State<_SkeletonCard>
         padding: const EdgeInsets.all(9),
         decoration: BoxDecoration(
           color: const Color(0xFFF6F7FF),
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: const Color(0xFFE4E2FB)),
+          borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+          border: Border.all(color: AppTokens.borderSoft),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,10 +146,10 @@ class _SkeletonCardState extends State<_SkeletonCard>
               height: 108,
               decoration: BoxDecoration(
                 color: const Color(0xFFE0E4FA),
-                borderRadius: BorderRadius.circular(13),
+                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.space2),
             Container(height: 12, width: double.infinity, color: const Color(0xFFDADFF9)),
             const SizedBox(height: 6),
             Container(height: 12, width: 80, color: const Color(0xFFDADFF9)),
@@ -160,9 +158,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
               children: [
                 Container(height: 34, width: 34, color: const Color(0xFFDADFF9)),
                 const SizedBox(width: 6),
-                Expanded(
-                  child: Container(height: 34, color: const Color(0xFFDADFF9)),
-                ),
+                Expanded(child: Container(height: 34, color: const Color(0xFFDADFF9))),
               ],
             ),
           ],
@@ -208,6 +204,7 @@ class _ProductCardState extends State<_ProductCard> {
     final effectiveImageHeight = compactMode
         ? (widget.imageHeight - 18).clamp(84.0, 140.0).toDouble()
         : widget.imageHeight;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
@@ -216,7 +213,7 @@ class _ProductCardState extends State<_ProductCard> {
         curve: Curves.easeOutCubic,
         offset: _hovered ? const Offset(0, -0.02) : Offset.zero,
         child: InkWell(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(AppTokens.radiusLg),
           onTap: widget.onOpenDetail,
           child: Container(
             padding: const EdgeInsets.all(9),
@@ -232,37 +229,11 @@ class _ProductCardState extends State<_ProductCard> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppTokens.radiusLg),
               border: Border.all(
-                color: product.isFeatured
-                    ? const Color(0xFFE8D98A)
-                    : const Color(0xFFE4E2FB),
+                color: product.isFeatured ? const Color(0xFFE8D98A) : AppTokens.borderSoft,
               ),
-              boxShadow: _hovered
-                  ? const [
-                      BoxShadow(
-                        color: Color(0x298B97D9),
-                        blurRadius: 22,
-                        offset: Offset(0, 12),
-                      ),
-                      BoxShadow(
-                        color: Color(0x145A67A6),
-                        blurRadius: 3,
-                        offset: Offset(0, 1),
-                      ),
-                    ]
-                  : const [
-                      BoxShadow(
-                        color: Color(0x1A8B97D9),
-                        blurRadius: 16,
-                        offset: Offset(0, 8),
-                      ),
-                      BoxShadow(
-                        color: Color(0x0D5A67A6),
-                        blurRadius: 2,
-                        offset: Offset(0, 1),
-                      ),
-                    ],
+              boxShadow: _hovered ? AppTokens.shadowCardHover : AppTokens.shadowCard,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -272,7 +243,7 @@ class _ProductCardState extends State<_ProductCard> {
                   child: Stack(
                     children: [
                       ClipRRect(
-                        borderRadius: BorderRadius.circular(13),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
                         child: AnimatedScale(
                           scale: _hovered ? 1.04 : 1.0,
                           duration: const Duration(milliseconds: 200),
@@ -314,7 +285,7 @@ class _ProductCardState extends State<_ProductCard> {
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(999),
+                              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
                               border: Border.all(color: const Color(0xFFE3D58A)),
                             ),
                             child: const Text(
@@ -330,7 +301,7 @@ class _ProductCardState extends State<_ProductCard> {
                     ],
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: AppTokens.space2),
                 Text(
                   product.name,
                   maxLines: 1,
@@ -418,7 +389,7 @@ class _LuxuryIconButton extends StatelessWidget {
       width: 34,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSm),
           gradient: hovered
               ? const LinearGradient(
                   colors: [Color(0xFFFFFFFF), Color(0xFFEFF3FF)],
@@ -498,7 +469,7 @@ class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
       duration: const Duration(milliseconds: 180),
       height: 32,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
         gradient: widget.hovered
             ? const LinearGradient(
                 colors: [Color(0xFFE3EAFF), Color(0xFFD2DEFF)],
@@ -513,7 +484,7 @@ class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
         border: Border.all(color: const Color(0xFFC9D6FF)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSm),
         child: Stack(
           fit: StackFit.expand,
           children: [
@@ -522,7 +493,9 @@ class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
               style: TextButton.styleFrom(
                 foregroundColor: const Color(0xFF2F3E7A),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSm),
+                ),
               ),
               child: Text(widget.label),
             ),
