@@ -204,6 +204,12 @@ class _ProductCardState extends State<_ProductCard> {
         return '新手入門';
       case 'static-3':
         return '日常必備';
+      case 'static-4':
+        return '敏感友善';
+      case 'static-5':
+        return '熱銷推薦';
+      case 'static-6':
+        return '夜間修護';
       default:
         return null;
     }
