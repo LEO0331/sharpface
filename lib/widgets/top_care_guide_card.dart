@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../core/theme/design_tokens.dart';
+
 class TopCareGuideCard extends StatelessWidget {
   const TopCareGuideCard({
     super.key,
@@ -14,22 +16,16 @@ class TopCareGuideCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(AppTokens.radiusXl),
         gradient: const LinearGradient(
           colors: [Color(0xFFEDE8FF), Color(0xFFE7F1FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A7B80E8),
-            blurRadius: 18,
-            offset: Offset(0, 8),
-          ),
-        ],
+        boxShadow: AppTokens.shadowCard,
       ),
       child: Padding(
-        padding: const EdgeInsets.all(18),
+        padding: const EdgeInsets.all(AppTokens.space4),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -38,11 +34,11 @@ class TopCareGuideCard extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: Colors.white.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
               ),
               child: const Icon(Icons.spa_outlined),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: AppTokens.space3),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +49,7 @@ class TopCareGuideCard extends StatelessWidget {
                           fontWeight: FontWeight.w700,
                         ),
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: AppTokens.space2),
                   Wrap(
                     spacing: 10,
                     runSpacing: 8,
@@ -65,7 +61,7 @@ class TopCareGuideCard extends StatelessWidget {
                       _GuideChip(label: '晚上：保濕'),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppTokens.space3),
                   Text('膚質：$skinType'),
                   const SizedBox(height: 6),
                   Text(
@@ -93,7 +89,7 @@ class _GuideChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.72),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(AppTokens.radiusPill),
         border: Border.all(color: const Color(0xFFD7D8F7)),
       ),
       child: Text(label),

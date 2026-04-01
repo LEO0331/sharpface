@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/theme/design_tokens.dart';
+
 enum BudgetTier { basic, balanced, premium }
 
 class QuickRoutineCard extends StatelessWidget {
@@ -23,7 +25,7 @@ class QuickRoutineCard extends StatelessWidget {
     final routine = _buildRoutine(selectedBudget, concerns);
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(AppTokens.space3),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -34,11 +36,11 @@ class QuickRoutineCard extends StatelessWidget {
                 Text('30 秒保養流程', style: Theme.of(context).textTheme.titleMedium),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AppTokens.space2),
             Text('膚質：$skinType'),
             const SizedBox(height: 6),
             Text('AI 建議：$suggestion', maxLines: 2, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 10),
+            const SizedBox(height: AppTokens.space2),
             Wrap(
               spacing: 8,
               children: [

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../../core/theme/design_tokens.dart';
+
 class AdMarqueeBanner extends StatefulWidget {
   const AdMarqueeBanner({
     super.key,
@@ -79,19 +81,13 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
         gradient: LinearGradient(
           colors: gradientColors,
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x1A7A80E8),
-            blurRadius: 16,
-            offset: Offset(0, 6),
-          ),
-        ],
+        boxShadow: AppTokens.shadowCard,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -128,11 +124,11 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
                     borderRadius: BorderRadius.circular(14),
                     onTap: () => widget.onAdClick(ad),
                     child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.84),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFD9DCF8)),
-                      ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.84),
+                      borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                      border: Border.all(color: const Color(0xFFD9DCF8)),
+                    ),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Row(
@@ -142,7 +138,7 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEAE7FF),
-                                borderRadius: BorderRadius.circular(12),
+                                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
                               ),
                               child: const Icon(Icons.auto_awesome_outlined, size: 20),
                             ),
