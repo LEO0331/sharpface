@@ -376,32 +376,17 @@ class _ProductCardState extends State<_ProductCard> {
                 const Spacer(),
                 Row(
                   children: [
-                    FilledButton.tonal(
+                    _LuxuryIconButton(
+                      hovered: _hovered,
+                      active: widget.isFav,
                       onPressed: widget.onToggleFavorite,
-                      style: FilledButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.9),
-                        minimumSize: const Size(34, 32),
-                        padding: EdgeInsets.zero,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
-                      child: Icon(
-                        widget.isFav ? Icons.favorite : Icons.favorite_border,
-                        size: 17,
-                        color: widget.isFav ? const Color(0xFFE15D88) : null,
-                      ),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
-                      child: FilledButton.tonal(
+                      child: _LuxuryBuyButton(
+                        label: widget.buyLabel,
+                        hovered: _hovered,
                         onPressed: widget.onBuy,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: const Color(0xFFE9EEFF),
-                          foregroundColor: const Color(0xFF2F3E7A),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
-                          minimumSize: const Size(0, 32),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: Text(widget.buyLabel),
                       ),
                     ),
                   ],
@@ -409,6 +394,168 @@ class _ProductCardState extends State<_ProductCard> {
               ],
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryIconButton extends StatelessWidget {
+  const _LuxuryIconButton({
+    required this.hovered,
+    required this.active,
+    required this.onPressed,
+  });
+
+  final bool hovered;
+  final bool active;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32,
+      width: 34,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(10),
+          gradient: hovered
+              ? const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFEFF3FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                )
+              : const LinearGradient(
+                  colors: [Color(0xFFFFFFFF), Color(0xFFF7F9FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+          border: Border.all(color: const Color(0xFFD9E0F8)),
+        ),
+        child: IconButton(
+          onPressed: onPressed,
+          visualDensity: VisualDensity.compact,
+          padding: EdgeInsets.zero,
+          icon: Icon(
+            active ? Icons.favorite : Icons.favorite_border,
+            size: 17,
+            color: active ? const Color(0xFFE15D88) : const Color(0xFF5162A6),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LuxuryBuyButton extends StatefulWidget {
+  const _LuxuryBuyButton({
+    required this.label,
+    required this.hovered,
+    required this.onPressed,
+  });
+
+  final String label;
+  final bool hovered;
+  final VoidCallback onPressed;
+
+  @override
+  State<_LuxuryBuyButton> createState() => _LuxuryBuyButtonState();
+}
+
+class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shineController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 850),
+      value: 1,
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant _LuxuryBuyButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.hovered && !oldWidget.hovered) {
+      _shineController
+        ..value = 0
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _shineController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      height: 32,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        gradient: widget.hovered
+            ? const LinearGradient(
+                colors: [Color(0xFFE3EAFF), Color(0xFFD2DEFF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : const LinearGradient(
+                colors: [Color(0xFFE9EEFF), Color(0xFFDDE6FF)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+        border: Border.all(color: const Color(0xFFC9D6FF)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(10),
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            TextButton(
+              onPressed: widget.onPressed,
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF2F3E7A),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(widget.label),
+            ),
+            IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _shineController,
+                builder: (context, child) {
+                  final t = _shineController.value;
+                  final x = -1.2 + (2.4 * t);
+                  return FractionalTranslation(
+                    translation: Offset(x, 0),
+                    child: Transform.rotate(
+                      angle: 0.25,
+                      child: Container(
+                        width: 20,
+                        decoration: const BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Color(0x00FFFFFF),
+                              Color(0x80FFFFFF),
+                              Color(0x00FFFFFF),
+                            ],
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
