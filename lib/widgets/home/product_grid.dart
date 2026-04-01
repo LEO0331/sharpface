@@ -43,8 +43,8 @@ class ProductGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final imageHeight = crossAxisCount == 3 ? 108.0 : 122.0;
-        final aspectRatio = crossAxisCount == 3 ? 0.82 : 0.72;
+        final imageHeight = crossAxisCount == 3 ? 96.0 : 108.0;
+        final aspectRatio = crossAxisCount == 3 ? 0.98 : 0.86;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -84,7 +84,7 @@ class _ProductGridSkeleton extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final aspectRatio = crossAxisCount == 3 ? 0.82 : 0.72;
+        final aspectRatio = crossAxisCount == 3 ? 0.98 : 0.86;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -143,7 +143,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 108,
+              height: 96,
               decoration: BoxDecoration(
                 color: const Color(0xFFE0E4FA),
                 borderRadius: BorderRadius.circular(AppTokens.radiusMd),
