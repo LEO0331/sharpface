@@ -44,8 +44,8 @@ class ProductGrid extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final imageHeight = crossAxisCount == 3 ? 80.0 : 92.0;
-        final aspectRatio = crossAxisCount == 3 ? 0.63 : 0.55;
+        final imageHeight = crossAxisCount == 3 ? 108.0 : 122.0;
+        final aspectRatio = crossAxisCount == 3 ? 0.82 : 0.72;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -60,117 +60,15 @@ class ProductGrid extends StatelessWidget {
           itemBuilder: (context, index) {
             final product = items[index];
             final isFav = favorites.contains(product.id);
-            return InkWell(
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => onOpenDetail(product),
-              child: Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: product.isFeatured ? const Color(0xFFFFF9C4) : Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE4E2FB)),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x147A80E8),
-                      blurRadius: 12,
-                      offset: Offset(0, 6),
-                    ),
-                  ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (product.imageUrl != null)
-                      Semantics(
-                        label: 'product-image-${product.name}',
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: Hero(
-                            tag: 'product-image-${product.id}',
-                            child: CachedNetworkImage(
-                              imageUrl: product.imageUrl!,
-                              width: double.infinity,
-                              height: imageHeight,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Container(
-                                height: imageHeight,
-                                color: const Color(0xFFE2E8F0),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                height: imageHeight,
-                                color: const Color(0xFFE2E8F0),
-                                alignment: Alignment.center,
-                                child: const Text('圖片載入中'),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    if (product.imageUrl != null) const SizedBox(height: 8),
-                    Text(
-                      product.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall,
-                    ),
-                    const SizedBox(height: 4),
-                    Text('價格：\$${product.price.toStringAsFixed(0)}'),
-                    Text(
-                      '主成分：${product.mainIngredients.join(', ')}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    Row(
-                      children: List.generate(
-                        3,
-                        (star) => Icon(
-                          star < product.rating ? Icons.star_rounded : Icons.star_border_rounded,
-                          size: 15,
-                          color: const Color(0xFF6676DD),
-                        ),
-                      ),
-                    ),
-                    if (product.userScore != null && product.reviewCount != null)
-                      Text('評價：${product.userScore}/5 (${product.reviewCount})'),
-                    if (reviewSamples[product.id] != null)
-                      Text(
-                        '• ${reviewSamples[product.id]!.first}',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    const Spacer(),
-                    Row(
-                      children: [
-                        FilledButton.tonal(
-                          onPressed: () => onToggleFavorite(product),
-                          style: FilledButton.styleFrom(
-                            minimumSize: const Size(36, 34),
-                            padding: EdgeInsets.zero,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          ),
-                          child: Icon(
-                            isFav ? Icons.favorite : Icons.favorite_border,
-                            size: 18,
-                            color: isFav ? const Color(0xFFE15D88) : null,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: FilledButton.tonal(
-                            onPressed: () => onBuy(product),
-                            style: FilledButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                              minimumSize: const Size(0, 34),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            ),
-                            child: Text(buyLabel),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
+            return _ProductCard(
+              product: product,
+              isFav: isFav,
+              imageHeight: imageHeight,
+              review: reviewSamples[product.id]?.first,
+              buyLabel: buyLabel,
+              onOpenDetail: () => onOpenDetail(product),
+              onToggleFavorite: () => onToggleFavorite(product),
+              onBuy: () => onBuy(product),
             );
           },
         );
@@ -188,7 +86,7 @@ class _ProductGridSkeleton extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final aspectRatio = crossAxisCount == 3 ? 0.63 : 0.55;
+        final aspectRatio = crossAxisCount == 3 ? 0.82 : 0.72;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -237,20 +135,20 @@ class _SkeletonCardState extends State<_SkeletonCard>
     return FadeTransition(
       opacity: Tween(begin: 0.48, end: 0.95).animate(_controller),
       child: Container(
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.all(9),
         decoration: BoxDecoration(
-          color: const Color(0xFFF2F3FF),
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFF6F7FF),
+          borderRadius: BorderRadius.circular(18),
           border: Border.all(color: const Color(0xFFE4E2FB)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              height: 84,
+              height: 108,
               decoration: BoxDecoration(
                 color: const Color(0xFFE0E4FA),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(13),
               ),
             ),
             const SizedBox(height: 8),
@@ -268,6 +166,249 @@ class _SkeletonCardState extends State<_SkeletonCard>
               ],
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductCard extends StatefulWidget {
+  const _ProductCard({
+    required this.product,
+    required this.isFav,
+    required this.imageHeight,
+    required this.buyLabel,
+    required this.onOpenDetail,
+    required this.onToggleFavorite,
+    required this.onBuy,
+    this.review,
+  });
+
+  final Product product;
+  final bool isFav;
+  final double imageHeight;
+  final String buyLabel;
+  final String? review;
+  final VoidCallback onOpenDetail;
+  final VoidCallback onToggleFavorite;
+  final VoidCallback onBuy;
+
+  @override
+  State<_ProductCard> createState() => _ProductCardState();
+}
+
+class _ProductCardState extends State<_ProductCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final product = widget.product;
+    final textScale = MediaQuery.textScalerOf(context).scale(1);
+    final compactMode = textScale > 1.2;
+    final effectiveImageHeight = compactMode
+        ? (widget.imageHeight - 18).clamp(84.0, 140.0).toDouble()
+        : widget.imageHeight;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: AnimatedSlide(
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOutCubic,
+        offset: _hovered ? const Offset(0, -0.02) : Offset.zero,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onTap: widget.onOpenDetail,
+          child: Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              gradient: product.isFeatured
+                  ? const LinearGradient(
+                      colors: [Color(0xFFFFF9C4), Color(0xFFFFF4B5)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    )
+                  : const LinearGradient(
+                      colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFF)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: product.isFeatured
+                    ? const Color(0xFFE8D98A)
+                    : const Color(0xFFE4E2FB),
+              ),
+              boxShadow: _hovered
+                  ? const [
+                      BoxShadow(
+                        color: Color(0x298B97D9),
+                        blurRadius: 22,
+                        offset: Offset(0, 12),
+                      ),
+                      BoxShadow(
+                        color: Color(0x145A67A6),
+                        blurRadius: 3,
+                        offset: Offset(0, 1),
+                      ),
+                    ]
+                  : const [
+                      BoxShadow(
+                        color: Color(0x1A8B97D9),
+                        blurRadius: 16,
+                        offset: Offset(0, 8),
+                      ),
+                      BoxShadow(
+                        color: Color(0x0D5A67A6),
+                        blurRadius: 2,
+                        offset: Offset(0, 1),
+                      ),
+                    ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(
+                  label: 'product-image-${product.name}',
+                  child: Stack(
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(13),
+                        child: AnimatedScale(
+                          scale: _hovered ? 1.04 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          child: product.imageUrl == null
+                              ? Container(
+                                  width: double.infinity,
+                                  height: effectiveImageHeight,
+                                  color: const Color(0xFFE8ECF8),
+                                  alignment: Alignment.center,
+                                  child: const Icon(Icons.inventory_2_outlined),
+                                )
+                              : Hero(
+                                  tag: 'product-image-${product.id}',
+                                  child: CachedNetworkImage(
+                                    imageUrl: product.imageUrl!,
+                                    width: double.infinity,
+                                    height: effectiveImageHeight,
+                                    fit: BoxFit.cover,
+                                    placeholder: (context, url) => Container(
+                                      height: effectiveImageHeight,
+                                      color: const Color(0xFFE2E8F0),
+                                    ),
+                                    errorWidget: (context, url, error) => Container(
+                                      height: effectiveImageHeight,
+                                      color: const Color(0xFFE2E8F0),
+                                      alignment: Alignment.center,
+                                      child: const Text('圖片載入中'),
+                                    ),
+                                  ),
+                                ),
+                        ),
+                      ),
+                      if (product.isFeatured)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.9),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(color: const Color(0xFFE3D58A)),
+                            ),
+                            child: const Text(
+                              'SPONSORED',
+                              style: TextStyle(
+                                fontSize: 9,
+                                letterSpacing: 0.4,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  product.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '\$${product.price.toStringAsFixed(0)}',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF2E3A66),
+                      ),
+                ),
+                Text(
+                  '主成分：${product.mainIngredients.join(', ')}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+                Row(
+                  children: List.generate(
+                    3,
+                    (star) => Icon(
+                      star < product.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                      size: 15,
+                      color: const Color(0xFF6676DD),
+                    ),
+                  ),
+                ),
+                if (!compactMode && product.userScore != null && product.reviewCount != null)
+                  Text(
+                    '評價 ${product.userScore}/5 (${product.reviewCount})',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                if (!compactMode && widget.review != null)
+                  Text(
+                    '• ${widget.review}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                const Spacer(),
+                Row(
+                  children: [
+                    FilledButton.tonal(
+                      onPressed: widget.onToggleFavorite,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: Colors.white.withValues(alpha: 0.9),
+                        minimumSize: const Size(34, 32),
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                      child: Icon(
+                        widget.isFav ? Icons.favorite : Icons.favorite_border,
+                        size: 17,
+                        color: widget.isFav ? const Color(0xFFE15D88) : null,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: FilledButton.tonal(
+                        onPressed: widget.onBuy,
+                        style: FilledButton.styleFrom(
+                          backgroundColor: const Color(0xFFE9EEFF),
+                          foregroundColor: const Color(0xFF2F3E7A),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+                          minimumSize: const Size(0, 32),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        child: Text(widget.buyLabel),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
