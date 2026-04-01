@@ -65,7 +65,7 @@ void main() {
       expect(history.first.messages.first, 'old');
     });
 
-    test('track impressions/clicks updates adStats and ctr', () async {
+    test('track impressions/clicks records adEvents only', () async {
       await service.trackAdImpression(
         pool: 'general',
         message: 'ad-x',
@@ -82,15 +82,11 @@ void main() {
         userId: 'u1',
       );
 
-      final stats = await firestore.collection('adStats').get();
-      expect(stats.docs.length, 1);
-      final data = stats.docs.first.data();
-      expect(data['impressions'], 2);
-      expect(data['clicks'], 1);
-      expect((data['ctr'] as num).toDouble(), 0.5);
-
       final events = await firestore.collection('adEvents').get();
       expect(events.docs.length, 3);
+      final types = events.docs.map((e) => e.data()['type']).toList();
+      expect(types.where((t) => t == 'impression').length, 2);
+      expect(types.where((t) => t == 'click').length, 1);
     });
 
     test('isActiveAt respects scheduling window', () {

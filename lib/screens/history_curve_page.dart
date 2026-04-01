@@ -141,6 +141,10 @@ class _HistoryCurvePageState extends State<HistoryCurvePage> {
                       ),
                       const SizedBox(height: 8),
                       const Text('分數越高代表需更積極保養。'),
+                      const SizedBox(height: 8),
+                      _ScoreMethodCard(sample: filtered.last),
+                      const SizedBox(height: 8),
+                      const _ScoreRangeAdviceCard(),
                     ],
                   ),
                 ),
@@ -184,5 +188,82 @@ class _HistoryCurvePageState extends State<HistoryCurvePage> {
       _ => 1,
     };
     return (concernsScore + skinTypeBonus).clamp(1, 10);
+  }
+}
+
+class _ScoreMethodCard extends StatelessWidget {
+  const _ScoreMethodCard({required this.sample});
+
+  final ScanRecord sample;
+
+  @override
+  Widget build(BuildContext context) {
+    final concernsScore = sample.concerns.length * 2;
+    final skinTypeBonus = switch (sample.skinType) {
+      '油性肌' => 2,
+      '乾性肌' => 2,
+      '混合肌' => 1,
+      _ => 1,
+    };
+    final total = (concernsScore + skinTypeBonus).clamp(1, 10);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF2F5FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFD8E0FF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            '膚況分數計算方式',
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 6),
+          const Text('公式：分數 = (問題數量 × 2) + 膚質加權，最後限制在 1~10。'),
+          const SizedBox(height: 4),
+          const Text('膚質加權：油性肌 +2、乾性肌 +2、混合肌 +1、其他 +1。'),
+          const SizedBox(height: 8),
+          Text(
+            '範例：本次問題 ${sample.concerns.length} 個 -> ${sample.concerns.length} × 2 = $concernsScore；'
+            '膚質 ${sample.skinType} 加權 = $skinTypeBonus；最終分數 = $total。',
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ScoreRangeAdviceCard extends StatelessWidget {
+  const _ScoreRangeAdviceCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFFAF0),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFF3E2B8)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: const [
+          Text('分數區間對應建議'),
+          SizedBox(height: 6),
+          Text('1-3（穩定）：維持清潔、保濕、防曬三步驟即可。'),
+          SizedBox(height: 4),
+          Text('4-6（需加強）：增加 1 項針對性精華，並觀察 1-2 週。'),
+          SizedBox(height: 4),
+          Text('7-10（高風險）：先簡化保養流程，優先修護與降低刺激。'),
+        ],
+      ),
+    );
   }
 }

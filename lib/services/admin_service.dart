@@ -52,24 +52,14 @@ class AdminService {
           ? 'No data'
           : (topProductSnapshot.docs.first.data()['name'] as String? ?? 'No data');
 
-      final topAdSnapshot = await _firestore
-          .collection('adStats')
-          .orderBy('ctr', descending: true)
-          .limit(1)
-          .get();
-      final topAdMessage = topAdSnapshot.docs.isEmpty
-          ? 'No data'
-          : (topAdSnapshot.docs.first.data()['message'] as String? ?? 'No data');
-      final topAdCtr = topAdSnapshot.docs.isEmpty
-          ? 0.0
-          : (topAdSnapshot.docs.first.data()['ctr'] as num?)?.toDouble() ?? 0.0;
+      final topAd = await _computeTopAdFromEvents();
 
       return AdminDashboardStats(
         totalUsers: userSnapshot.count ?? 0,
         todayScans: todayScansSnapshot.count ?? 0,
         topProductName: topName,
-        topAdMessage: topAdMessage,
-        topAdCtr: topAdCtr,
+        topAdMessage: topAd.$1,
+        topAdCtr: topAd.$2,
       );
     } on FirebaseException catch (e) {
       if (e.code != 'permission-denied') rethrow;
@@ -98,5 +88,51 @@ class AdminService {
     } catch (_) {
       return null;
     }
+  }
+
+  Future<(String, double)> _computeTopAdFromEvents() async {
+    final snapshot = await _firestore
+        .collection('adEvents')
+        .orderBy('createdAt', descending: true)
+        .limit(1000)
+        .get();
+    if (snapshot.docs.isEmpty) return ('No data', 0.0);
+
+    final impressions = <String, int>{};
+    final clicks = <String, int>{};
+    final labels = <String, String>{};
+
+    for (final doc in snapshot.docs) {
+      final data = doc.data();
+      final adId = (data['adId'] as String?) ?? '';
+      final message = (data['message'] as String?) ?? 'No data';
+      final type = (data['type'] as String?) ?? '';
+      if (adId.isEmpty) continue;
+      labels[adId] = message;
+      if (type == 'impression') {
+        impressions[adId] = (impressions[adId] ?? 0) + 1;
+      } else if (type == 'click') {
+        clicks[adId] = (clicks[adId] ?? 0) + 1;
+      }
+    }
+
+    String topAdId = '';
+    double topCtr = 0;
+    int topImpressions = 0;
+    for (final entry in impressions.entries) {
+      final adId = entry.key;
+      final imp = entry.value;
+      if (imp <= 0) continue;
+      final clk = clicks[adId] ?? 0;
+      final ctr = clk / imp;
+      if (ctr > topCtr || (ctr == topCtr && imp > topImpressions)) {
+        topCtr = ctr;
+        topImpressions = imp;
+        topAdId = adId;
+      }
+    }
+
+    if (topAdId.isEmpty) return ('No data', 0.0);
+    return (labels[topAdId] ?? 'No data', topCtr);
   }
 }

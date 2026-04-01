@@ -29,6 +29,16 @@ service cloud.firestore {
       match /favorites/{favoriteId} {
         allow read, write: if isSignedIn() && request.auth.uid == userId;
       }
+
+      match /priceAlerts/{productId} {
+        allow read: if isSignedIn() && request.auth.uid == userId;
+        allow create, update: if isSignedIn()
+          && request.auth.uid == userId
+          && request.resource.data.keys().hasAll(['productId', 'targetPrice', 'productName', 'createdAt'])
+          && request.resource.data.targetPrice is number
+          && request.resource.data.targetPrice > 0;
+        allow delete: if isSignedIn() && request.auth.uid == userId;
+      }
     }
 
     match /products/{docId} {
@@ -80,31 +90,7 @@ service cloud.firestore {
 
     match /adStats/{docId} {
       allow read: if isAdmin();
-      allow create: if request.resource.data.keys().hasAll(
-        ['pool', 'message', 'impressions', 'clicks', 'ctr']
-      )
-      && request.resource.data.impressions is int
-      && request.resource.data.clicks is int
-      && request.resource.data.impressions >= 0
-      && request.resource.data.clicks >= 0
-      && request.resource.data.ctr is number
-      && request.resource.data.ctr >= 0
-      && request.resource.data.ctr <= 1;
-      allow update: if request.resource.data.keys().hasAll(
-        ['pool', 'message', 'impressions', 'clicks', 'ctr']
-      )
-      && request.resource.data.pool == resource.data.pool
-      && request.resource.data.message == resource.data.message
-      && request.resource.data.impressions is int
-      && request.resource.data.clicks is int
-      && request.resource.data.impressions >= resource.data.impressions
-      && request.resource.data.clicks >= resource.data.clicks
-      && request.resource.data.impressions <= resource.data.impressions + 1
-      && request.resource.data.clicks <= resource.data.clicks + 1
-      && request.resource.data.ctr is number
-      && request.resource.data.ctr >= 0
-      && request.resource.data.ctr <= 1;
-      allow delete: if isAdmin();
+      allow create, update, delete: if false;
     }
   }
 }

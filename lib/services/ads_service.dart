@@ -160,38 +160,13 @@ class AdsService {
     if (normalizedMessage.isEmpty) return;
     final adId = '${pool}_${normalizedMessage.hashCode}';
 
-    final eventRef = _firestore.collection('adEvents').doc();
-    final statsRef = _firestore.collection('adStats').doc(adId);
-    await _firestore.runTransaction((tx) async {
-      final statsSnap = await tx.get(statsRef);
-      final currentImpressions =
-          (statsSnap.data()?['impressions'] as num?)?.toInt() ?? 0;
-      final currentClicks = (statsSnap.data()?['clicks'] as num?)?.toInt() ?? 0;
-      final nextImpressions = currentImpressions + (type == 'impression' ? 1 : 0);
-      final nextClicks = currentClicks + (type == 'click' ? 1 : 0);
-      final nextCtr = nextImpressions == 0 ? 0.0 : nextClicks / nextImpressions;
-
-      tx.set(eventRef, {
-        'adId': adId,
-        'pool': pool,
-        'message': normalizedMessage,
-        'type': type,
-        'userId': userId,
-        'createdAt': FieldValue.serverTimestamp(),
-      });
-
-      tx.set(
-        statsRef,
-        {
-          'pool': pool,
-          'message': normalizedMessage,
-          'impressions': nextImpressions,
-          'clicks': nextClicks,
-          'ctr': nextCtr,
-          'updatedAt': FieldValue.serverTimestamp(),
-        },
-        SetOptions(merge: true),
-      );
+    await _firestore.collection('adEvents').add({
+      'adId': adId,
+      'pool': pool,
+      'message': normalizedMessage,
+      'type': type,
+      'userId': userId,
+      'createdAt': FieldValue.serverTimestamp(),
     });
   }
 }
