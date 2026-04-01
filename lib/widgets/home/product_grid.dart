@@ -196,10 +196,24 @@ class _ProductCard extends StatefulWidget {
 class _ProductCardState extends State<_ProductCard> {
   bool _hovered = false;
 
+  String? _staticBadgeLabel(String productId) {
+    switch (productId) {
+      case 'static-1':
+        return '人氣精選';
+      case 'static-2':
+        return '新手入門';
+      case 'static-3':
+        return '日常必備';
+      default:
+        return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
     final isStaticProduct = product.id.startsWith('static-');
+    final staticBadge = isStaticProduct ? _staticBadgeLabel(product.id) : null;
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final compactMode = textScale > 1.2;
     final effectiveImageHeight = compactMode
@@ -300,6 +314,28 @@ class _ProductCardState extends State<_ProductCard> {
                                 fontSize: 9,
                                 letterSpacing: 0.4,
                                 fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            ),
+                          ),
+                      if (staticBadge != null)
+                        Positioned(
+                          top: 8,
+                          right: 8,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF2F3E7A).withValues(alpha: 0.86),
+                              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                              border: Border.all(color: const Color(0xFFBFC9F7)),
+                            ),
+                            child: Text(
+                              staticBadge,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.2,
                               ),
                             ),
                           ),
