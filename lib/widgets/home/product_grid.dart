@@ -199,11 +199,17 @@ class _ProductCardState extends State<_ProductCard> {
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
+    final isStaticProduct = product.id.startsWith('static-');
     final textScale = MediaQuery.textScalerOf(context).scale(1);
     final compactMode = textScale > 1.2;
     final effectiveImageHeight = compactMode
         ? (widget.imageHeight - 18).clamp(84.0, 140.0).toDouble()
         : widget.imageHeight;
+    final imageHeightForCard = isStaticProduct
+        ? (effectiveImageHeight + 10).clamp(84.0, 150.0).toDouble()
+        : effectiveImageHeight;
+    final compactInfoBlock =
+        product.imageUrl != null && product.userScore == null && widget.review == null;
 
     return MouseRegion(
       onEnter: (_) => setState(() => _hovered = true),
@@ -251,7 +257,7 @@ class _ProductCardState extends State<_ProductCard> {
                           child: product.imageUrl == null
                               ? Container(
                                   width: double.infinity,
-                                  height: effectiveImageHeight,
+                                  height: imageHeightForCard,
                                   color: const Color(0xFFE8ECF8),
                                   alignment: Alignment.center,
                                   child: const Icon(Icons.inventory_2_outlined),
@@ -261,14 +267,14 @@ class _ProductCardState extends State<_ProductCard> {
                                   child: CachedNetworkImage(
                                     imageUrl: product.imageUrl!,
                                     width: double.infinity,
-                                    height: effectiveImageHeight,
+                                    height: imageHeightForCard,
                                     fit: BoxFit.cover,
                                     placeholder: (context, url) => Container(
-                                      height: effectiveImageHeight,
+                                      height: imageHeightForCard,
                                       color: const Color(0xFFE2E8F0),
                                     ),
                                     errorWidget: (context, url, error) => Container(
-                                      height: effectiveImageHeight,
+                                      height: imageHeightForCard,
                                       color: const Color(0xFFE2E8F0),
                                       alignment: Alignment.center,
                                       child: const Text('圖片載入中'),
@@ -344,7 +350,10 @@ class _ProductCardState extends State<_ProductCard> {
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                const Spacer(),
+                if (compactInfoBlock)
+                  const SizedBox(height: 6)
+                else
+                  const Spacer(),
                 Row(
                   children: [
                     _LuxuryIconButton(
