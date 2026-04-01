@@ -44,7 +44,7 @@ class ProductGrid extends StatelessWidget {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
         final imageHeight = crossAxisCount == 3 ? 96.0 : 108.0;
-        final aspectRatio = crossAxisCount == 3 ? 0.98 : 0.86;
+        final aspectRatio = crossAxisCount == 3 ? 0.90 : 0.78;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -84,7 +84,7 @@ class _ProductGridSkeleton extends StatelessWidget {
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final crossAxisCount = width >= 720 ? 3 : 2;
-        final aspectRatio = crossAxisCount == 3 ? 0.98 : 0.86;
+        final aspectRatio = crossAxisCount == 3 ? 0.90 : 0.78;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -215,6 +215,27 @@ class _ProductCardState extends State<_ProductCard> {
     }
   }
 
+  String _effectLabel(Product product) {
+    final ingredients = product.mainIngredients.join(',');
+    if (ingredients.contains('水楊酸') || ingredients.contains('杜鵑花酸')) return '抗痘控油';
+    if (ingredients.contains('玻尿酸') || ingredients.contains('神經醯胺')) return '補水修護';
+    if (ingredients.contains('氧化鋅')) return '防曬防護';
+    if (ingredients.contains('咖啡因')) return '眼周提亮';
+    if (product.rating >= 3) return '高評價';
+    return '日常保養';
+  }
+
+  String _userDescription(Product product) {
+    if (widget.review != null && widget.review!.trim().isNotEmpty) {
+      return widget.review!;
+    }
+    final score = product.userScore;
+    if (score != null && score >= 4.6) return '多數使用者回饋：短期有感、會回購。';
+    if (score != null && score >= 4.2) return '多數使用者回饋：質地舒適，日常使用穩定。';
+    if (score != null) return '多數使用者回饋：溫和不刺激，需持續使用。';
+    return '使用者回饋：日常保養友善，適合入門。';
+  }
+
   @override
   Widget build(BuildContext context) {
     final product = widget.product;
@@ -226,7 +247,9 @@ class _ProductCardState extends State<_ProductCard> {
         ? (widget.imageHeight - 18).clamp(84.0, 140.0).toDouble()
         : widget.imageHeight;
     final imageHeightForCard = isStaticProduct
-        ? (effectiveImageHeight + 10).clamp(84.0, 150.0).toDouble()
+        ? ((compactMode ? effectiveImageHeight : effectiveImageHeight + 10)
+            .clamp(84.0, 150.0)
+            .toDouble())
         : effectiveImageHeight;
     final compactInfoBlock =
         product.imageUrl != null && product.userScore == null && widget.review == null;
@@ -364,12 +387,13 @@ class _ProductCardState extends State<_ProductCard> {
                         color: const Color(0xFF2E3A66),
                       ),
                 ),
-                Text(
-                  '主成分：${product.mainIngredients.join(', ')}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
+                if (!compactMode)
+                  Text(
+                    '主成分：${product.mainIngredients.join(', ')}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                 Row(
                   children: List.generate(
                     3,
@@ -385,13 +409,38 @@ class _ProductCardState extends State<_ProductCard> {
                     '評價 ${product.userScore}/5 (${product.reviewCount})',
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
-                if (!compactMode && widget.review != null)
+                if (!compactMode && !compactInfoBlock)
                   Text(
-                    '• ${widget.review}',
+                    '• ${_userDescription(product)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall,
                   ),
+                SizedBox(height: compactMode ? 2 : 4),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: Container(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: compactMode ? 6 : 8,
+                      vertical: compactMode ? 2 : 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFEFF3FF),
+                      borderRadius: BorderRadius.circular(AppTokens.radiusPill),
+                      border: Border.all(color: const Color(0xFFD8E1FF)),
+                    ),
+                    child: Text(
+                      '效果：${_effectLabel(product)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF3D4A84),
+                            fontSize: compactMode ? 11 : null,
+                          ),
+                    ),
+                  ),
+                ),
                 if (compactInfoBlock)
                   const SizedBox(height: 6)
                 else
