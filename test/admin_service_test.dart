@@ -65,5 +65,77 @@ void main() {
       expect(stats.topAdMessage, 'A');
       expect(stats.topAdCtr, 0.5);
     });
+
+    test(
+      'fetchStats returns no-data fallback when collections empty',
+      () async {
+        final stats = await service.fetchStats();
+        expect(stats.totalUsers, 0);
+        expect(stats.todayScans, 0);
+        expect(stats.topProductName, 'No data');
+        expect(stats.topAdMessage, 'No data');
+        expect(stats.topAdCtr, 0);
+      },
+    );
+
+    test('top ad picks higher impressions when ctr is tied', () async {
+      await firestore.collection('products').doc('p').set({
+        'name': 'Any Product',
+        'clickCount': 1,
+      });
+
+      for (var i = 0; i < 2; i++) {
+        await firestore.collection('adEvents').add({
+          'adId': 'ad_small',
+          'message': 'Small CTR Pool',
+          'type': 'impression',
+          'createdAt': DateTime.now(),
+        });
+      }
+      await firestore.collection('adEvents').add({
+        'adId': 'ad_small',
+        'message': 'Small CTR Pool',
+        'type': 'click',
+        'createdAt': DateTime.now(),
+      });
+
+      for (var i = 0; i < 4; i++) {
+        await firestore.collection('adEvents').add({
+          'adId': 'ad_big',
+          'message': 'Big CTR Pool',
+          'type': 'impression',
+          'createdAt': DateTime.now(),
+        });
+      }
+      for (var i = 0; i < 2; i++) {
+        await firestore.collection('adEvents').add({
+          'adId': 'ad_big',
+          'message': 'Big CTR Pool',
+          'type': 'click',
+          'createdAt': DateTime.now(),
+        });
+      }
+
+      final stats = await service.fetchStats();
+      expect(stats.topAdMessage, 'Big CTR Pool');
+      expect(stats.topAdCtr, 0.5);
+    });
+
+    test('ad events with missing impression return no ad data', () async {
+      await firestore.collection('products').doc('p').set({
+        'name': 'Any Product',
+        'clickCount': 1,
+      });
+      await firestore.collection('adEvents').add({
+        'adId': 'click_only',
+        'message': 'Click Only',
+        'type': 'click',
+        'createdAt': DateTime.now(),
+      });
+
+      final stats = await service.fetchStats();
+      expect(stats.topAdMessage, 'No data');
+      expect(stats.topAdCtr, 0);
+    });
   });
 }

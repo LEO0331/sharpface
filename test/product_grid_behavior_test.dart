@@ -118,4 +118,69 @@ void main() {
       findsNWidgets(3),
     );
   });
+
+  testWidgets('renders featured badge and effect chip text', (
+    tester,
+  ) async {
+    const featuredProduct = Product(
+      id: 'p2',
+      name: 'Featured Item',
+      price: 350,
+      mainIngredients: ['水楊酸'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/s1',
+      isFeatured: true,
+      clickCount: 0,
+    );
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 1200,
+            child: ProductGrid(
+              products: const [featuredProduct],
+              isLoading: false,
+              favorites: const {},
+              reviewSamples: const {},
+              onToggleFavorite: (_) {},
+              onBuy: (_) {},
+              onOpenDetail: (_) {},
+              buyLabel: 'Buy',
+              noProductText: 'No products',
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('SPONSORED'), findsOneWidget);
+    expect(find.textContaining('效果：抗痘控油'), findsOneWidget);
+  });
+
+  testWidgets('shows no-product text when item list is empty', (tester) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: SizedBox(
+            width: 800,
+            child: ProductGrid(
+              products: const [],
+              isLoading: false,
+              favorites: const {},
+              reviewSamples: const {},
+              onToggleFavorite: (_) {},
+              onBuy: (_) {},
+              onOpenDetail: (_) {},
+              buyLabel: 'Buy',
+              noProductText: 'No products',
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('No products'), findsOneWidget);
+  });
 }
