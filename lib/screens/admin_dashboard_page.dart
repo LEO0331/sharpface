@@ -1,8 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
+import '../core/theme/design_tokens.dart';
 import '../services/admin_service.dart';
 import '../services/ads_service.dart';
+import '../widgets/ui/motion_system.dart';
+import '../widgets/ui/page_atmosphere.dart';
 
 class AdminDashboardPage extends StatefulWidget {
   const AdminDashboardPage({super.key});
@@ -73,15 +76,16 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
   }
 
   AdPoolConfig _buildConfig(String pool) {
-    final messages = _controllers[pool]!
-        .text
+    final messages = _controllers[pool]!.text
         .split('\n')
         .map((e) => e.trim())
         .where((e) => e.isNotEmpty)
         .toList();
     final start = _startAt[pool];
     final end = _endAt[pool];
-    final normalizedEnd = (start != null && end != null && end.isBefore(start)) ? null : end;
+    final normalizedEnd = (start != null && end != null && end.isBefore(start))
+        ? null
+        : end;
     return AdPoolConfig(
       pool: pool,
       messages: messages,
@@ -99,14 +103,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         await _adsService.saveDraftConfig(_buildConfig(pool));
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('草稿已儲存。')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('草稿已儲存。')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('草稿儲存失敗：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('草稿儲存失敗：$e')));
     } finally {
       if (mounted) setState(() => _savingAds = false);
     }
@@ -119,14 +123,14 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
         await _adsService.publishPoolConfig(_buildConfig(pool));
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('廣告池已發布。')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('廣告池已發布。')));
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('發布失敗：$e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('發布失敗：$e')));
     } finally {
       if (mounted) setState(() => _savingAds = false);
     }
@@ -170,9 +174,9 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     if (!mounted) return;
 
     if (history.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('沒有可回滾的歷史版本。')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('沒有可回滾的歷史版本。')));
       return;
     }
 
@@ -185,8 +189,12 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
           itemBuilder: (context, index) {
             final item = history[index];
             return ListTile(
-              title: Text('版本 ${index + 1} | priority=${item.priority} | enabled=${item.enabled}'),
-              subtitle: Text(item.messages.isEmpty ? '無文案' : item.messages.first),
+              title: Text(
+                '版本 ${index + 1} | priority=${item.priority} | enabled=${item.enabled}',
+              ),
+              subtitle: Text(
+                item.messages.isEmpty ? '無文案' : item.messages.first,
+              ),
               onTap: () {
                 _controllers[pool]!.text = item.messages.join('\n');
                 _enabled[pool] = item.enabled;
@@ -208,183 +216,266 @@ class _AdminDashboardPageState extends State<AdminDashboardPage> {
     final service = AdminService(FirebaseFirestore.instance);
 
     return SelectionArea(
-      child: Scaffold(
-        appBar: AppBar(title: const Text('管理後台')),
-        body: FutureBuilder<AdminDashboardStats>(
-          future: service.fetchStats(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-            if (snapshot.hasError) {
-              final error = snapshot.error;
-              final message = error is AdminPermissionException
-                  ? error.message
-                  : '載入失敗：$error';
-              return Padding(
-                padding: const EdgeInsets.all(16),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: SelectableText(message),
-                  ),
-                ),
-              );
-            }
-
-            final stats = snapshot.data!;
-            return ListView(
-              padding: const EdgeInsets.all(16),
-              children: [
-                _MetricCard(title: '總用戶數', value: '${stats.totalUsers}'),
-                _MetricCard(title: '今日分析次數', value: '${stats.todayScans}'),
-                _MetricCard(title: '點擊量最高產品', value: stats.topProductName),
-                _MetricCard(
-                  title: '最高 CTR 廣告',
-                  value: '${stats.topAdMessage}\nCTR ${(stats.topAdCtr * 100).toStringAsFixed(1)}%',
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '廣告池管理 (Firestore)',
-                          style: Theme.of(context).textTheme.titleMedium,
+      child: MotionPresetBuilder(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('管理後台'),
+            actions: const [MotionPresetSwitcherButton()],
+          ),
+          body: PageAtmosphere(
+            child: FutureBuilder<AdminDashboardStats>(
+              future: service.fetchStats(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+                if (snapshot.hasError) {
+                  final error = snapshot.error;
+                  final message = error is AdminPermissionException
+                      ? error.message
+                      : '載入失敗：$error';
+                  return Padding(
+                    padding: const EdgeInsets.all(AppTokens.space4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppTokens.space4),
+                      child: Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(AppTokens.space4),
+                          child: SelectableText(message),
                         ),
-                        const SizedBox(height: 8),
-                        const Text('可設定啟用/停用、排序權重、預覽、草稿、回滾。'),
-                        const SizedBox(height: 12),
-                        if (_loadingAds)
-                          const Padding(
-                            padding: EdgeInsets.all(12),
-                            child: CircularProgressIndicator(),
-                          )
-                        else ...[
-                          ..._controllers.entries.map((entry) {
-                            final pool = entry.key;
-                            final label = _poolLabels[pool] ?? pool;
-                            return Container(
-                              margin: const EdgeInsets.only(bottom: 12),
-                              padding: const EdgeInsets.all(10),
-                              decoration: BoxDecoration(
-                                border: Border.all(color: const Color(0xFFE2E8F0)),
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text('$label (adConfigs/$pool)'),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: SwitchListTile(
-                                          value: _enabled[pool] ?? true,
-                                          onChanged: (value) => setState(() => _enabled[pool] = value),
-                                          contentPadding: EdgeInsets.zero,
-                                          title: const Text('啟用'),
+                      ),
+                    ),
+                  );
+                }
+
+                final stats = snapshot.data!;
+                return PageEnterTransition(
+                  child: ListView(
+                    padding: const EdgeInsets.all(AppTokens.space4),
+                    children: [
+                      StaggerReveal(
+                        index: 0,
+                        child: _MetricCard(
+                          title: '總用戶數',
+                          value: '${stats.totalUsers}',
+                        ),
+                      ),
+                      StaggerReveal(
+                        index: 1,
+                        child: _MetricCard(
+                          title: '今日分析次數',
+                          value: '${stats.todayScans}',
+                        ),
+                      ),
+                      StaggerReveal(
+                        index: 2,
+                        child: _MetricCard(
+                          title: '點擊量最高產品',
+                          value: stats.topProductName,
+                        ),
+                      ),
+                      StaggerReveal(
+                        index: 3,
+                        child: _MetricCard(
+                          title: '最高 CTR 廣告',
+                          value:
+                              '${stats.topAdMessage}\nCTR ${(stats.topAdCtr * 100).toStringAsFixed(1)}%',
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      StaggerReveal(
+                        index: 4,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '廣告池管理 (Firestore)',
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium,
+                                ),
+                                const SizedBox(height: 8),
+                                const Text('可設定啟用/停用、排序權重、預覽、草稿、回滾。'),
+                                const SizedBox(height: 12),
+                                if (_loadingAds)
+                                  const Padding(
+                                    padding: EdgeInsets.all(12),
+                                    child: CircularProgressIndicator(),
+                                  )
+                                else ...[
+                                  ..._controllers.entries.map((entry) {
+                                    final pool = entry.key;
+                                    final label = _poolLabels[pool] ?? pool;
+                                    return Container(
+                                      margin: const EdgeInsets.only(bottom: 12),
+                                      padding: const EdgeInsets.all(10),
+                                      decoration: BoxDecoration(
+                                        border: Border.all(
+                                          color: const Color(0xFFE2E8F0),
                                         ),
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
-                                      const SizedBox(width: 12),
-                                      SizedBox(
-                                        width: 120,
-                                        child: TextFormField(
-                                          initialValue: (_priority[pool] ?? 100).toString(),
-                                          keyboardType: TextInputType.number,
-                                          decoration: const InputDecoration(labelText: '權重'),
-                                          onChanged: (value) {
-                                            _priority[pool] = int.tryParse(value) ?? 0;
-                                          },
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  TextField(
-                                    controller: entry.value,
-                                    maxLines: 4,
-                                    decoration: const InputDecoration(
-                                      labelText: '廣告文案 (每行一則)',
-                                      alignLabelWithHint: true,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: TextFormField(
-                                          initialValue: _startAt[pool]?.toIso8601String() ?? '',
-                                          decoration: const InputDecoration(
-                                            labelText: '開始時間 (ISO8601)',
-                                            hintText: '2026-03-27T09:00:00',
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text('$label (adConfigs/$pool)'),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: SwitchListTile(
+                                                  value: _enabled[pool] ?? true,
+                                                  onChanged: (value) =>
+                                                      setState(
+                                                        () => _enabled[pool] =
+                                                            value,
+                                                      ),
+                                                  contentPadding:
+                                                      EdgeInsets.zero,
+                                                  title: const Text('啟用'),
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              SizedBox(
+                                                width: 120,
+                                                child: TextFormField(
+                                                  initialValue:
+                                                      (_priority[pool] ?? 100)
+                                                          .toString(),
+                                                  keyboardType:
+                                                      TextInputType.number,
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText: '權重',
+                                                      ),
+                                                  onChanged: (value) {
+                                                    _priority[pool] =
+                                                        int.tryParse(value) ??
+                                                        0;
+                                                  },
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          onChanged: (value) {
-                                            _startAt[pool] = value.trim().isEmpty
-                                                ? null
-                                                : DateTime.tryParse(value.trim());
-                                          },
-                                        ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: TextFormField(
-                                          initialValue: _endAt[pool]?.toIso8601String() ?? '',
-                                          decoration: const InputDecoration(
-                                            labelText: '結束時間 (ISO8601)',
-                                            hintText: '2026-03-28T00:00:00',
+                                          TextField(
+                                            controller: entry.value,
+                                            maxLines: 4,
+                                            decoration: const InputDecoration(
+                                              labelText: '廣告文案 (每行一則)',
+                                              alignLabelWithHint: true,
+                                            ),
                                           ),
-                                          onChanged: (value) {
-                                            _endAt[pool] = value.trim().isEmpty
-                                                ? null
-                                                : DateTime.tryParse(value.trim());
-                                          },
-                                        ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: TextFormField(
+                                                  initialValue:
+                                                      _startAt[pool]
+                                                          ?.toIso8601String() ??
+                                                      '',
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText:
+                                                            '開始時間 (ISO8601)',
+                                                        hintText:
+                                                            '2026-03-27T09:00:00',
+                                                      ),
+                                                  onChanged: (value) {
+                                                    _startAt[pool] =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : DateTime.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                  },
+                                                ),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Expanded(
+                                                child: TextFormField(
+                                                  initialValue:
+                                                      _endAt[pool]
+                                                          ?.toIso8601String() ??
+                                                      '',
+                                                  decoration:
+                                                      const InputDecoration(
+                                                        labelText:
+                                                            '結束時間 (ISO8601)',
+                                                        hintText:
+                                                            '2026-03-28T00:00:00',
+                                                      ),
+                                                  onChanged: (value) {
+                                                    _endAt[pool] =
+                                                        value.trim().isEmpty
+                                                        ? null
+                                                        : DateTime.tryParse(
+                                                            value.trim(),
+                                                          );
+                                                  },
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Wrap(
+                                            spacing: 8,
+                                            children: [
+                                              OutlinedButton(
+                                                onPressed: () =>
+                                                    _previewPool(pool),
+                                                child: const Text('預覽'),
+                                              ),
+                                              OutlinedButton(
+                                                onPressed: () =>
+                                                    _rollbackPool(pool),
+                                                child: const Text('回滾'),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
+                                    );
+                                  }),
                                   Wrap(
-                                    spacing: 8,
+                                    spacing: 10,
                                     children: [
-                                      OutlinedButton(
-                                        onPressed: () => _previewPool(pool),
-                                        child: const Text('預覽'),
+                                      OutlinedButton.icon(
+                                        onPressed: _savingAds
+                                            ? null
+                                            : _saveDrafts,
+                                        icon: const Icon(Icons.drafts_outlined),
+                                        label: const Text('儲存草稿'),
                                       ),
-                                      OutlinedButton(
-                                        onPressed: () => _rollbackPool(pool),
-                                        child: const Text('回滾'),
+                                      FilledButton.icon(
+                                        onPressed: _savingAds
+                                            ? null
+                                            : _publishAll,
+                                        icon: const Icon(
+                                          Icons.publish_outlined,
+                                        ),
+                                        label: Text(
+                                          _savingAds ? '發布中...' : '發布到線上',
+                                        ),
                                       ),
                                     ],
                                   ),
                                 ],
-                              ),
-                            );
-                          }),
-                          Wrap(
-                            spacing: 10,
-                            children: [
-                              OutlinedButton.icon(
-                                onPressed: _savingAds ? null : _saveDrafts,
-                                icon: const Icon(Icons.drafts_outlined),
-                                label: const Text('儲存草稿'),
-                              ),
-                              FilledButton.icon(
-                                onPressed: _savingAds ? null : _publishAll,
-                                icon: const Icon(Icons.publish_outlined),
-                                label: Text(_savingAds ? '發布中...' : '發布到線上'),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ],
-                      ],
-                    ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-              ],
-            );
-          },
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
@@ -401,10 +492,7 @@ class _MetricCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        title: Text(title),
-        subtitle: SelectableText(value),
-      ),
+      child: ListTile(title: Text(title), subtitle: SelectableText(value)),
     );
   }
 }

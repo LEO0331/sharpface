@@ -22,6 +22,8 @@ import '../widgets/home/ad_marquee_banner.dart';
 import '../widgets/home/product_grid.dart';
 import '../widgets/home/quick_routine_card.dart';
 import '../widgets/top_care_guide_card.dart';
+import '../widgets/ui/motion_system.dart';
+import '../widgets/ui/page_atmosphere.dart';
 import 'admin_dashboard_page.dart';
 import 'auth_page.dart';
 import 'history_curve_page.dart';
@@ -39,7 +41,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   final _scrollController = ScrollController();
   final _favorites = <String>{};
   final _favoriteProducts = <String, Product>{};
-  final _openAI = OpenAIService(apiKey: const String.fromEnvironment('OPENAI_API_KEY'));
+  final _openAI = OpenAIService(
+    apiKey: const String.fromEnvironment('OPENAI_API_KEY'),
+  );
   final _authService = AuthService();
   final _scanRecordService = ScanRecordService();
   final _favoriteService = FavoriteService();
@@ -85,38 +89,274 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   ];
 
   final List<Product> _staticProducts = const [
-    Product(id: 'static-1', name: '控油潔面膠', price: 450, mainIngredients: ['水楊酸', '菸鹼醯胺'], rating: 2, affiliateUrl: 'https://example.com/oil-cleanser', isFeatured: true, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=80'),
-    Product(id: 'static-2', name: '抗痘精華', price: 980, mainIngredients: ['杜鵑花酸', '積雪草'], rating: 3, affiliateUrl: 'https://example.com/acne-serum', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?auto=format&fit=crop&w=900&q=80'),
-    Product(id: 'static-3', name: '清爽保濕乳', price: 720, mainIngredients: ['玻尿酸', '神經醯胺'], rating: 2, affiliateUrl: 'https://example.com/moisture-lotion', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80'),
-    Product(id: 'static-4', name: '舒緩修護精華', price: 860, mainIngredients: ['積雪草', '泛醇 B5'], rating: 2, affiliateUrl: 'https://example.com/repair-serum', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80'),
-    Product(id: 'static-5', name: '日間清爽防曬', price: 690, mainIngredients: ['氧化鋅', '維他命E'], rating: 3, affiliateUrl: 'https://example.com/day-sunscreen', isFeatured: true, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1629198735660-e39ea93f5c18?auto=format&fit=crop&w=900&q=80'),
-    Product(id: 'static-6', name: '夜間修護乳霜', price: 930, mainIngredients: ['神經醯胺', '角鯊烷'], rating: 2, affiliateUrl: 'https://example.com/night-cream', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=80'),
+    Product(
+      id: 'static-1',
+      name: '控油潔面膠',
+      price: 450,
+      mainIngredients: ['水楊酸', '菸鹼醯胺'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/oil-cleanser',
+      isFeatured: true,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=80',
+    ),
+    Product(
+      id: 'static-2',
+      name: '抗痘精華',
+      price: 980,
+      mainIngredients: ['杜鵑花酸', '積雪草'],
+      rating: 3,
+      affiliateUrl: 'https://example.com/acne-serum',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1612817159949-195b6eb9e31a?auto=format&fit=crop&w=900&q=80',
+    ),
+    Product(
+      id: 'static-3',
+      name: '清爽保濕乳',
+      price: 720,
+      mainIngredients: ['玻尿酸', '神經醯胺'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/moisture-lotion',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80',
+    ),
+    Product(
+      id: 'static-4',
+      name: '舒緩修護精華',
+      price: 860,
+      mainIngredients: ['積雪草', '泛醇 B5'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/repair-serum',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=900&q=80',
+    ),
+    Product(
+      id: 'static-5',
+      name: '日間清爽防曬',
+      price: 690,
+      mainIngredients: ['氧化鋅', '維他命E'],
+      rating: 3,
+      affiliateUrl: 'https://example.com/day-sunscreen',
+      isFeatured: true,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1629198735660-e39ea93f5c18?auto=format&fit=crop&w=900&q=80',
+    ),
+    Product(
+      id: 'static-6',
+      name: '夜間修護乳霜',
+      price: 930,
+      mainIngredients: ['神經醯胺', '角鯊烷'],
+      rating: 2,
+      affiliateUrl: 'https://example.com/night-cream',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=80',
+    ),
   ];
 
   final List<Product> _testingProducts = const [
-    Product(id: 'test-1', name: '抗痘修護精華（測試）', price: 1090, mainIngredients: ['杜鵑花酸', 'B5'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-serum-1', isFeatured: true, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80', userScore: 4.6, reviewCount: 182),
-    Product(id: 'test-2', name: '溫和潔面（測試）', price: 420, mainIngredients: ['胺基酸', '甘草'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-cleanser-2', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=80', userScore: 4.3, reviewCount: 96),
-    Product(id: 'test-3', name: '日間防曬 SPF50（測試）', price: 680, mainIngredients: ['氧化鋅', '維他命E'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-sunscreen-3', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1619451687485-878a53e28d32?auto=format&fit=crop&w=900&q=80', userScore: 4.4, reviewCount: 128),
-    Product(id: 'test-4', name: '夜間修護乳（測試）', price: 780, mainIngredients: ['神經醯胺', '角鯊烷'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-night-4', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1629198735660-e39ea93f5c18?auto=format&fit=crop&w=900&q=80', userScore: 4.2, reviewCount: 72),
-    Product(id: 'test-5', name: '控油化妝水（測試）', price: 390, mainIngredients: ['金縷梅', '鋅 PCA'], rating: 1, affiliateUrl: 'https://shop.example.com/p/test-toner-5', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=900&q=80', userScore: 4.0, reviewCount: 64),
-    Product(id: 'test-6', name: '黑眼圈眼部精華（測試）', price: 880, mainIngredients: ['咖啡因', '維他命K'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-eye-6', isFeatured: true, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=900&q=80', userScore: 4.7, reviewCount: 143),
-    Product(id: 'test-7', name: '敏感修護凝膠（測試）', price: 520, mainIngredients: ['積雪草', '尿囊素'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-repair-7', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1629738355957-f4ebd6b0dd3d?auto=format&fit=crop&w=900&q=80', userScore: 4.1, reviewCount: 59),
-    Product(id: 'test-8', name: '泥膜清潔（測試）', price: 460, mainIngredients: ['高嶺土', '鋅'], rating: 1, affiliateUrl: 'https://shop.example.com/p/test-mask-8', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=80', userScore: 3.9, reviewCount: 44),
-    Product(id: 'test-9', name: '清爽乳液（測試）', price: 650, mainIngredients: ['玻尿酸', '維他命B3'], rating: 2, affiliateUrl: 'https://shop.example.com/p/test-lotion-9', isFeatured: false, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=900&q=80', userScore: 4.3, reviewCount: 118),
-    Product(id: 'test-10', name: '男士修護組（測試）', price: 1290, mainIngredients: ['多胜肽', '神經醯胺'], rating: 3, affiliateUrl: 'https://shop.example.com/p/test-kit-10', isFeatured: true, clickCount: 0, imageUrl: 'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=80', userScore: 4.8, reviewCount: 207),
+    Product(
+      id: 'test-1',
+      name: '抗痘修護精華（測試）',
+      price: 1090,
+      mainIngredients: ['杜鵑花酸', 'B5'],
+      rating: 3,
+      affiliateUrl: 'https://shop.example.com/p/test-serum-1',
+      isFeatured: true,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1571781926291-c477ebfd024b?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.6,
+      reviewCount: 182,
+    ),
+    Product(
+      id: 'test-2',
+      name: '溫和潔面（測試）',
+      price: 420,
+      mainIngredients: ['胺基酸', '甘草'],
+      rating: 2,
+      affiliateUrl: 'https://shop.example.com/p/test-cleanser-2',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1556229010-6c3f2c9ca5f8?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.3,
+      reviewCount: 96,
+    ),
+    Product(
+      id: 'test-3',
+      name: '日間防曬 SPF50（測試）',
+      price: 680,
+      mainIngredients: ['氧化鋅', '維他命E'],
+      rating: 2,
+      affiliateUrl: 'https://shop.example.com/p/test-sunscreen-3',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1619451687485-878a53e28d32?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.4,
+      reviewCount: 128,
+    ),
+    Product(
+      id: 'test-4',
+      name: '夜間修護乳（測試）',
+      price: 780,
+      mainIngredients: ['神經醯胺', '角鯊烷'],
+      rating: 2,
+      affiliateUrl: 'https://shop.example.com/p/test-night-4',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1629198735660-e39ea93f5c18?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.2,
+      reviewCount: 72,
+    ),
+    Product(
+      id: 'test-5',
+      name: '控油化妝水（測試）',
+      price: 390,
+      mainIngredients: ['金縷梅', '鋅 PCA'],
+      rating: 1,
+      affiliateUrl: 'https://shop.example.com/p/test-toner-5',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1599305090598-fe179d501227?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.0,
+      reviewCount: 64,
+    ),
+    Product(
+      id: 'test-6',
+      name: '黑眼圈眼部精華（測試）',
+      price: 880,
+      mainIngredients: ['咖啡因', '維他命K'],
+      rating: 3,
+      affiliateUrl: 'https://shop.example.com/p/test-eye-6',
+      isFeatured: true,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1612817288484-6f916006741a?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.7,
+      reviewCount: 143,
+    ),
+    Product(
+      id: 'test-7',
+      name: '敏感修護凝膠（測試）',
+      price: 520,
+      mainIngredients: ['積雪草', '尿囊素'],
+      rating: 2,
+      affiliateUrl: 'https://shop.example.com/p/test-repair-7',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1629738355957-f4ebd6b0dd3d?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.1,
+      reviewCount: 59,
+    ),
+    Product(
+      id: 'test-8',
+      name: '泥膜清潔（測試）',
+      price: 460,
+      mainIngredients: ['高嶺土', '鋅'],
+      rating: 1,
+      affiliateUrl: 'https://shop.example.com/p/test-mask-8',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&w=900&q=80',
+      userScore: 3.9,
+      reviewCount: 44,
+    ),
+    Product(
+      id: 'test-9',
+      name: '清爽乳液（測試）',
+      price: 650,
+      mainIngredients: ['玻尿酸', '維他命B3'],
+      rating: 2,
+      affiliateUrl: 'https://shop.example.com/p/test-lotion-9',
+      isFeatured: false,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1611930022073-b7a4ba5fcccd?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.3,
+      reviewCount: 118,
+    ),
+    Product(
+      id: 'test-10',
+      name: '男士修護組（測試）',
+      price: 1290,
+      mainIngredients: ['多胜肽', '神經醯胺'],
+      rating: 3,
+      affiliateUrl: 'https://shop.example.com/p/test-kit-10',
+      isFeatured: true,
+      clickCount: 0,
+      imageUrl:
+          'https://images.unsplash.com/photo-1556228578-8c89e6adf883?auto=format&fit=crop&w=900&q=80',
+      userScore: 4.8,
+      reviewCount: 207,
+    ),
   ];
 
   final List<_FallbackAnalysis> _fallbackAnalyses = const [
-    _FallbackAnalysis(skinType: '混合肌（測試）', suggestion: '白天輕保濕+防曬，晚間溫和清潔。', concerns: ['痘痘', '黑眼圈']),
-    _FallbackAnalysis(skinType: '油性肌（測試）', suggestion: '加強控油與角質代謝，避免厚重乳霜。', concerns: ['痘痘', '毛孔粗大']),
-    _FallbackAnalysis(skinType: '乾性肌（測試）', suggestion: '提升保濕層次，睡前加強修護。', concerns: ['乾燥', '脫皮']),
-    _FallbackAnalysis(skinType: '敏感肌（測試）', suggestion: '降低刺激，優先修護屏障配方。', concerns: ['泛紅', '乾癢']),
-    _FallbackAnalysis(skinType: '混合肌（測試）', suggestion: 'T 字控油，雙頰加保濕，日間一定防曬。', concerns: ['出油', '黑頭']),
-    _FallbackAnalysis(skinType: '油性肌（測試）', suggestion: '晨間溫和潔面，晚間抗痘修護。', concerns: ['痘痘', '粉刺']),
-    _FallbackAnalysis(skinType: '乾性肌（測試）', suggestion: '清潔減量，乳霜與精華分層補水。', concerns: ['細紋', '乾燥']),
-    _FallbackAnalysis(skinType: '混合肌（測試）', suggestion: '平衡油水平衡，避免過度清潔。', concerns: ['黑眼圈', '暗沉']),
-    _FallbackAnalysis(skinType: '敏感肌（測試）', suggestion: '選擇無香精產品，建立穩定日常。', concerns: ['泛紅', '刺癢']),
-    _FallbackAnalysis(skinType: '油性肌（測試）', suggestion: '白天清爽防曬，夜間局部抗痘。', concerns: ['痘痘', '黑眼圈']),
+    _FallbackAnalysis(
+      skinType: '混合肌（測試）',
+      suggestion: '白天輕保濕+防曬，晚間溫和清潔。',
+      concerns: ['痘痘', '黑眼圈'],
+    ),
+    _FallbackAnalysis(
+      skinType: '油性肌（測試）',
+      suggestion: '加強控油與角質代謝，避免厚重乳霜。',
+      concerns: ['痘痘', '毛孔粗大'],
+    ),
+    _FallbackAnalysis(
+      skinType: '乾性肌（測試）',
+      suggestion: '提升保濕層次，睡前加強修護。',
+      concerns: ['乾燥', '脫皮'],
+    ),
+    _FallbackAnalysis(
+      skinType: '敏感肌（測試）',
+      suggestion: '降低刺激，優先修護屏障配方。',
+      concerns: ['泛紅', '乾癢'],
+    ),
+    _FallbackAnalysis(
+      skinType: '混合肌（測試）',
+      suggestion: 'T 字控油，雙頰加保濕，日間一定防曬。',
+      concerns: ['出油', '黑頭'],
+    ),
+    _FallbackAnalysis(
+      skinType: '油性肌（測試）',
+      suggestion: '晨間溫和潔面，晚間抗痘修護。',
+      concerns: ['痘痘', '粉刺'],
+    ),
+    _FallbackAnalysis(
+      skinType: '乾性肌（測試）',
+      suggestion: '清潔減量，乳霜與精華分層補水。',
+      concerns: ['細紋', '乾燥'],
+    ),
+    _FallbackAnalysis(
+      skinType: '混合肌（測試）',
+      suggestion: '平衡油水平衡，避免過度清潔。',
+      concerns: ['黑眼圈', '暗沉'],
+    ),
+    _FallbackAnalysis(
+      skinType: '敏感肌（測試）',
+      suggestion: '選擇無香精產品，建立穩定日常。',
+      concerns: ['泛紅', '刺癢'],
+    ),
+    _FallbackAnalysis(
+      skinType: '油性肌（測試）',
+      suggestion: '白天清爽防曬，夜間局部抗痘。',
+      concerns: ['痘痘', '黑眼圈'],
+    ),
   ];
 
   final List<String> _acneAds = const [
@@ -169,11 +409,15 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     super.initState();
     _scrollController.addListener(() {
       if (!mounted) return;
-      final next = _scrollController.hasClients ? _scrollController.offset : 0.0;
+      final next = _scrollController.hasClients
+          ? _scrollController.offset
+          : 0.0;
       if ((next - _scrollOffset).abs() < 10) return;
       setState(() => _scrollOffset = next);
     });
-    _authStateSubscription = _authService.authStateChanges().listen(_handleAuthChanged);
+    _authStateSubscription = _authService.authStateChanges().listen(
+      _handleAuthChanged,
+    );
     _loadAdCache();
     _startAdSubscriptions();
     _preloadFirstScreen();
@@ -233,18 +477,23 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     _loadFavoritesCache(user.uid);
     if (_isPageVisible) _startFavoritesSubscription(user.uid);
 
-    _authService.isAdmin(user.uid).then((isAdmin) {
-      _isAdmin = isAdmin;
-      if (mounted) setState(() {});
-    }).catchError((_) {
-      _isAdmin = false;
-      if (mounted) setState(() {});
-    });
+    _authService
+        .isAdmin(user.uid)
+        .then((isAdmin) {
+          _isAdmin = isAdmin;
+          if (mounted) setState(() {});
+        })
+        .catchError((_) {
+          _isAdmin = false;
+          if (mounted) setState(() {});
+        });
   }
 
   void _startFavoritesSubscription(String uid) {
     _cloudFavoritesSubscription?.cancel();
-    _cloudFavoritesSubscription = _favoriteService.watchFavorites(uid).listen((products) {
+    _cloudFavoritesSubscription = _favoriteService.watchFavorites(uid).listen((
+      products,
+    ) {
       _cloudFavoriteIds
         ..clear()
         ..addAll(products.map((e) => e.id));
@@ -337,9 +586,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
     if (_guestScanUsed) {
       if (!mounted) return false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('訪客僅可掃描一次，請先註冊登入。')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('訪客僅可掃描一次，請先註冊登入。')));
       return false;
     }
 
@@ -484,7 +733,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       await _saveScanRecord();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppStrings.of(context).t('analysisUnavailable'))),
+        SnackBar(
+          content: Text(AppStrings.of(context).t('analysisUnavailable')),
+        ),
       );
     }
   }
@@ -575,7 +826,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
   }
 
   int _similarityScore(Product a, Product b) {
-    final shared = a.mainIngredients.where((i) => b.mainIngredients.contains(i)).length;
+    final shared = a.mainIngredients
+        .where((i) => b.mainIngredients.contains(i))
+        .length;
     final ratingGap = (a.rating - b.rating).abs();
     return shared * 10 - ratingGap;
   }
@@ -637,9 +890,9 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     );
     if (!mounted) return;
     if (success == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('登入/註冊成功')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('登入/註冊成功')));
     }
     setState(() {});
   }
@@ -681,7 +934,10 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     final pool = _selectAdPool(concerns);
     _activeAdPool = pool;
     final config = _remoteAdConfigs[pool];
-    final source = (config != null && config.isActiveAt(DateTime.now()) && config.messages.isNotEmpty)
+    final source =
+        (config != null &&
+            config.isActiveAt(DateTime.now()) &&
+            config.messages.isNotEmpty)
         ? config.messages
         : _fallbackAdsByPool(pool);
     final shuffled = [...source]..shuffle(_random);
@@ -692,9 +948,15 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     final candidates = <String>{'general'};
     if (concerns.contains('痘痘')) candidates.add('acne');
     if (concerns.contains('黑眼圈')) candidates.add('darkcircle');
-    if (concerns.contains('乾燥') || concerns.contains('脫皮')) candidates.add('dryness');
-    if (concerns.contains('泛紅') || concerns.contains('刺癢')) candidates.add('sensitive');
-    if (concerns.contains('細紋') || concerns.contains('暗沉')) candidates.add('antiaging');
+    if (concerns.contains('乾燥') || concerns.contains('脫皮')) {
+      candidates.add('dryness');
+    }
+    if (concerns.contains('泛紅') || concerns.contains('刺癢')) {
+      candidates.add('sensitive');
+    }
+    if (concerns.contains('細紋') || concerns.contains('暗沉')) {
+      candidates.add('antiaging');
+    }
 
     String selected = 'general';
     var selectedPriority = -9999;
@@ -752,7 +1014,10 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
 
     final isFavorite = _cloudFavoriteIds.contains(product.id);
     if (isFavorite) {
-      await _favoriteService.removeFavorite(uid: user.uid, productId: product.id);
+      await _favoriteService.removeFavorite(
+        uid: user.uid,
+        productId: product.id,
+      );
     } else {
       await _favoriteService.addFavorite(uid: user.uid, product: product);
     }
@@ -768,7 +1033,10 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
       ...{for (final product in currentProducts) product.id: product},
       ...activeProducts,
     };
-    final favoriteList = activeIds.map((id) => byId[id]).whereType<Product>().toList();
+    final favoriteList = activeIds
+        .map((id) => byId[id])
+        .whereType<Product>()
+        .toList();
 
     await showModalBottomSheet<void>(
       context: context,
@@ -811,21 +1079,12 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
     );
   }
 
-  Widget _buildReveal({
-    required Widget child,
-    required double triggerOffset,
-  }) {
+  Widget _buildReveal({required Widget child, required double triggerOffset}) {
     final visible = _scrollOffset + 520 >= triggerOffset;
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: const Duration(milliseconds: 420),
-      curve: Curves.easeOut,
-      child: AnimatedSlide(
-        duration: const Duration(milliseconds: 420),
-        curve: Curves.easeOutCubic,
-        offset: visible ? Offset.zero : const Offset(0, 0.08),
-        child: child,
-      ),
+    return MotionReveal(
+      visible: visible,
+      offset: const Offset(0, 0.08),
+      child: child,
     );
   }
 
@@ -851,182 +1110,203 @@ class _HomePageState extends ConsumerState<HomePage> with RouteAware {
         final firebaseUser = authSnapshot.data;
         final activeFavoriteIds = _activeFavoriteIds(firebaseUser);
         return SelectionArea(
-          child: Scaffold(
-            drawer: Drawer(
-              child: ListView(
-                children: [
-                  DrawerHeader(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(AppStrings.of(context).t('appTitle')),
-                        const SizedBox(height: 8),
-                        Text(firebaseUser?.email ?? AppStrings.of(context).t('notLoggedIn')),
-                      ],
-                    ),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.favorite_outline),
-                    title: Text(AppStrings.of(context).t('favorites')),
-                    subtitle: Text('已收藏 ${activeFavoriteIds.length} 件'),
-                    onTap: () {
-                      Navigator.pop(context);
-                      _showFavoritesSheet(
-                        user: firebaseUser,
-                        currentProducts: filteredProducts,
-                      );
-                    },
-                  ),
-                  if (firebaseUser != null)
-                    ListTile(
-                      leading: const Icon(Icons.show_chart),
-                      title: Text(AppStrings.of(context).t('historyCurve')),
-                      onTap: () {
-                        final userId = firebaseUser.uid;
-                        Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => HistoryCurvePage(userId: userId),
+          child: MotionPresetBuilder(
+            child: Scaffold(
+              drawer: Drawer(
+                child: ListView(
+                  children: [
+                    DrawerHeader(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(AppStrings.of(context).t('appTitle')),
+                          const SizedBox(height: 8),
+                          Text(
+                            firebaseUser?.email ??
+                                AppStrings.of(context).t('notLoggedIn'),
                           ),
-                        );
-                      },
+                        ],
+                      ),
                     ),
-                  if (_isAdmin)
                     ListTile(
-                      leading: const Icon(Icons.admin_panel_settings_outlined),
-                      title: Text(AppStrings.of(context).t('adminDashboard')),
+                      leading: const Icon(Icons.favorite_outline),
+                      title: Text(AppStrings.of(context).t('favorites')),
+                      subtitle: Text('已收藏 ${activeFavoriteIds.length} 件'),
                       onTap: () {
                         Navigator.pop(context);
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const AdminDashboardPage()),
+                        _showFavoritesSheet(
+                          user: firebaseUser,
+                          currentProducts: filteredProducts,
                         );
                       },
                     ),
-                  const Divider(),
-                  ListTile(
-                    leading: Icon(firebaseUser == null ? Icons.login : Icons.logout),
-                    title: Text(
-                      firebaseUser == null
-                          ? AppStrings.of(context).t('loginRegister')
-                          : AppStrings.of(context).t('logout'),
+                    if (firebaseUser != null)
+                      ListTile(
+                        leading: const Icon(Icons.show_chart),
+                        title: Text(AppStrings.of(context).t('historyCurve')),
+                        onTap: () {
+                          final userId = firebaseUser.uid;
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => HistoryCurvePage(userId: userId),
+                            ),
+                          );
+                        },
+                      ),
+                    if (_isAdmin)
+                      ListTile(
+                        leading: const Icon(
+                          Icons.admin_panel_settings_outlined,
+                        ),
+                        title: Text(AppStrings.of(context).t('adminDashboard')),
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const AdminDashboardPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    const Divider(),
+                    ListTile(
+                      leading: Icon(
+                        firebaseUser == null ? Icons.login : Icons.logout,
+                      ),
+                      title: Text(
+                        firebaseUser == null
+                            ? AppStrings.of(context).t('loginRegister')
+                            : AppStrings.of(context).t('logout'),
+                      ),
+                      onTap: () async {
+                        Navigator.pop(context);
+                        if (firebaseUser == null) {
+                          await _goAuthPage();
+                          return;
+                        }
+                        await _authService.signOut();
+                      },
                     ),
-                    onTap: () async {
-                      Navigator.pop(context);
+                  ],
+                ),
+              ),
+              appBar: AppBar(
+                title: Text(AppStrings.of(context).t('appTitle')),
+                actions: [
+                  const MotionPresetSwitcherButton(),
+                  TextButton.icon(
+                    onPressed: _pickAndAnalyze,
+                    icon: const Icon(Icons.camera_alt_outlined),
+                    label: Text(AppStrings.of(context).t('analyzePhoto')),
+                  ),
+                  IconButton(
+                    tooltip: firebaseUser == null ? '登入/註冊' : '登出',
+                    onPressed: () async {
                       if (firebaseUser == null) {
                         await _goAuthPage();
                         return;
                       }
                       await _authService.signOut();
                     },
+                    icon: Icon(
+                      firebaseUser == null
+                          ? Icons.person_outline
+                          : Icons.logout,
+                    ),
                   ),
+                  const SizedBox(width: 8),
                 ],
               ),
-            ),
-            appBar: AppBar(
-              title: Text(AppStrings.of(context).t('appTitle')),
-              actions: [
-                TextButton.icon(
-                  onPressed: _pickAndAnalyze,
-                  icon: const Icon(Icons.camera_alt_outlined),
-                  label: Text(AppStrings.of(context).t('analyzePhoto')),
-                ),
-                IconButton(
-                  tooltip: firebaseUser == null ? '登入/註冊' : '登出',
-                  onPressed: () async {
-                    if (firebaseUser == null) {
-                      await _goAuthPage();
-                      return;
-                    }
-                    await _authService.signOut();
-                  },
-                  icon: Icon(firebaseUser == null ? Icons.person_outline : Icons.logout),
-                ),
-                const SizedBox(width: 8),
-              ],
-            ),
-            body: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFFF8F6FF), Color(0xFFEEF4FF), Color(0xFFF6FAFF)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: ListView(
-                controller: _scrollController,
-                padding: const EdgeInsets.all(16),
-                children: [
-                  _buildReveal(
-                    triggerOffset: 0,
-                    child: TopCareGuideCard(skinType: _skinType, suggestion: _suggestion),
-                  ),
-                  if (_hasAnalyzed) ...[
-                    const SizedBox(height: 12),
-                    _buildReveal(
-                      triggerOffset: 60,
-                      child: QuickRoutineCard(
-                        skinType: _skinType,
-                        concerns: _concerns,
-                        suggestion: _suggestion,
-                        selectedBudget: _selectedBudget,
-                        onBudgetChanged: (tier) => setState(() => _selectedBudget = tier),
+              body: PageAtmosphere(
+                child: PageEnterTransition(
+                  child: ListView(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.all(16),
+                    children: [
+                      _buildReveal(
+                        triggerOffset: 0,
+                        child: TopCareGuideCard(
+                          skinType: _skinType,
+                          suggestion: _suggestion,
+                        ),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 12),
-                  _buildReveal(
-                    triggerOffset: 110,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: TextField(
-                          decoration: InputDecoration(
-                            prefixIcon: const Icon(Icons.search),
-                            hintText: AppStrings.of(context).t('searchProduct'),
+                      if (_hasAnalyzed) ...[
+                        const SizedBox(height: 12),
+                        _buildReveal(
+                          triggerOffset: 60,
+                          child: QuickRoutineCard(
+                            skinType: _skinType,
+                            concerns: _concerns,
+                            suggestion: _suggestion,
+                            selectedBudget: _selectedBudget,
+                            onBudgetChanged: (tier) =>
+                                setState(() => _selectedBudget = tier),
                           ),
-                          onChanged: (value) => setState(() => _searchQuery = value),
+                        ),
+                      ],
+                      const SizedBox(height: 12),
+                      _buildReveal(
+                        triggerOffset: 110,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: TextField(
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.search),
+                                hintText: AppStrings.of(
+                                  context,
+                                ).t('searchProduct'),
+                              ),
+                              onChanged: (value) =>
+                                  setState(() => _searchQuery = value),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _buildReveal(
-                    triggerOffset: 220,
-                    child: Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: ProductGrid(
-                          products: filteredProducts,
-                          isLoading: showProductSkeleton,
-                          favorites: activeFavoriteIds,
-                          reviewSamples: _testingReviews,
-                          onToggleFavorite: (product) => _toggleFavorite(firebaseUser, product),
-                          onBuy: _openAffiliate,
-                          onOpenDetail: _openProductDetail,
-                          buyLabel: AppStrings.of(context).t('buy'),
-                          noProductText: AppStrings.of(context).t('noProduct'),
+                      const SizedBox(height: 10),
+                      _buildReveal(
+                        triggerOffset: 220,
+                        child: Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(12),
+                            child: ProductGrid(
+                              products: filteredProducts,
+                              isLoading: showProductSkeleton,
+                              favorites: activeFavoriteIds,
+                              reviewSamples: _testingReviews,
+                              onToggleFavorite: (product) =>
+                                  _toggleFavorite(firebaseUser, product),
+                              onBuy: _openAffiliate,
+                              onOpenDetail: _openProductDetail,
+                              buyLabel: AppStrings.of(context).t('buy'),
+                              noProductText: AppStrings.of(
+                                context,
+                              ).t('noProduct'),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 12),
+                      _buildReveal(
+                        triggerOffset: 440,
+                        child: AdMarqueeBanner(
+                          hasAcneConcern: _concerns.contains('痘痘'),
+                          adMessages: _activeAds,
+                          onAdImpression: _trackAdImpression,
+                          onAdClick: (message) {
+                            _trackAdClick(message);
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('已記錄廣告點擊：$message')),
+                            );
+                          },
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  _buildReveal(
-                    triggerOffset: 440,
-                    child: AdMarqueeBanner(
-                      hasAcneConcern: _concerns.contains('痘痘'),
-                      adMessages: _activeAds,
-                      onAdImpression: _trackAdImpression,
-                      onAdClick: (message) {
-                        _trackAdClick(message);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('已記錄廣告點擊：$message')),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ),

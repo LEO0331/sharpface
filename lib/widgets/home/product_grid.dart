@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/theme/design_tokens.dart';
 import '../../models/product.dart';
+import '../ui/motion_system.dart';
 
 class ProductGrid extends StatelessWidget {
   const ProductGrid({
@@ -126,7 +127,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 950),
+      duration: AppMotion.pageEnter * 2,
     )..repeat(reverse: true);
   }
 
@@ -138,6 +139,7 @@ class _SkeletonCardState extends State<_SkeletonCard>
 
   @override
   Widget build(BuildContext context) {
+    _controller.duration = AppMotion.pageEnter * 2;
     return FadeTransition(
       opacity: Tween(begin: 0.48, end: 0.95).animate(_controller),
       child: Container(
@@ -158,15 +160,25 @@ class _SkeletonCardState extends State<_SkeletonCard>
               ),
             ),
             const SizedBox(height: AppTokens.space2),
-            Container(height: 12, width: double.infinity, color: const Color(0xFFDADFF9)),
+            Container(
+              height: 12,
+              width: double.infinity,
+              color: const Color(0xFFDADFF9),
+            ),
             const SizedBox(height: 6),
             Container(height: 12, width: 80, color: const Color(0xFFDADFF9)),
             const Spacer(),
             Row(
               children: [
-                Container(height: 34, width: 34, color: const Color(0xFFDADFF9)),
+                Container(
+                  height: 34,
+                  width: 34,
+                  color: const Color(0xFFDADFF9),
+                ),
                 const SizedBox(width: 6),
-                Expanded(child: Container(height: 34, color: const Color(0xFFDADFF9))),
+                Expanded(
+                  child: Container(height: 34, color: const Color(0xFFDADFF9)),
+                ),
               ],
             ),
           ],
@@ -225,8 +237,12 @@ class _ProductCardState extends State<_ProductCard> {
 
   String _effectLabel(Product product) {
     final ingredients = product.mainIngredients.join(',');
-    if (ingredients.contains('水楊酸') || ingredients.contains('杜鵑花酸')) return '抗痘控油';
-    if (ingredients.contains('玻尿酸') || ingredients.contains('神經醯胺')) return '補水修護';
+    if (ingredients.contains('水楊酸') || ingredients.contains('杜鵑花酸')) {
+      return '抗痘控油';
+    }
+    if (ingredients.contains('玻尿酸') || ingredients.contains('神經醯胺')) {
+      return '補水修護';
+    }
     if (ingredients.contains('氧化鋅')) return '防曬防護';
     if (ingredients.contains('咖啡因')) return '眼周提亮';
     if (product.rating >= 3) return '高評價';
@@ -270,8 +286,8 @@ class _ProductCardState extends State<_ProductCard> {
         : widget.imageHeight;
     final imageHeightForCard = isStaticProduct
         ? ((compactMode ? effectiveImageHeight : effectiveImageHeight + 10)
-            .clamp(84.0, 150.0)
-            .toDouble())
+              .clamp(84.0, 150.0)
+              .toDouble())
         : effectiveImageHeight;
     final reviewLines = _reviewLines(product);
 
@@ -279,8 +295,8 @@ class _ProductCardState extends State<_ProductCard> {
       onEnter: (_) => setState(() => _hovered = true),
       onExit: (_) => setState(() => _hovered = false),
       child: AnimatedSlide(
-        duration: const Duration(milliseconds: 180),
-        curve: Curves.easeOutCubic,
+        duration: AppMotion.hover,
+        curve: AppMotion.enterCurve,
         offset: _hovered ? const Offset(0, -0.02) : Offset.zero,
         child: InkWell(
           borderRadius: BorderRadius.circular(AppTokens.radiusLg),
@@ -301,9 +317,13 @@ class _ProductCardState extends State<_ProductCard> {
                     ),
               borderRadius: BorderRadius.circular(AppTokens.radiusLg),
               border: Border.all(
-                color: product.isFeatured ? const Color(0xFFE8D98A) : AppTokens.borderSoft,
+                color: product.isFeatured
+                    ? const Color(0xFFE8D98A)
+                    : AppTokens.borderSoft,
               ),
-              boxShadow: _hovered ? AppTokens.shadowCardHover : AppTokens.shadowCard,
+              boxShadow: _hovered
+                  ? AppTokens.shadowCardHover
+                  : AppTokens.shadowCard,
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,8 +336,8 @@ class _ProductCardState extends State<_ProductCard> {
                         borderRadius: BorderRadius.circular(AppTokens.radiusMd),
                         child: AnimatedScale(
                           scale: _hovered ? 1.04 : 1.0,
-                          duration: const Duration(milliseconds: 200),
-                          curve: Curves.easeOutCubic,
+                          duration: AppMotion.hover,
+                          curve: AppMotion.enterCurve,
                           child: product.imageUrl == null
                               ? Container(
                                   width: double.infinity,
@@ -337,12 +357,13 @@ class _ProductCardState extends State<_ProductCard> {
                                       height: imageHeightForCard,
                                       color: const Color(0xFFE2E8F0),
                                     ),
-                                    errorWidget: (context, url, error) => Container(
-                                      height: imageHeightForCard,
-                                      color: const Color(0xFFE2E8F0),
-                                      alignment: Alignment.center,
-                                      child: const Text('圖片載入中'),
-                                    ),
+                                    errorWidget: (context, url, error) =>
+                                        Container(
+                                          height: imageHeightForCard,
+                                          color: const Color(0xFFE2E8F0),
+                                          alignment: Alignment.center,
+                                          child: const Text('圖片載入中'),
+                                        ),
                                   ),
                                 ),
                         ),
@@ -352,11 +373,18 @@ class _ProductCardState extends State<_ProductCard> {
                           top: 8,
                           left: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withValues(alpha: 0.9),
-                              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                              border: Border.all(color: const Color(0xFFE3D58A)),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusPill,
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFFE3D58A),
+                              ),
                             ),
                             child: const Text(
                               'SPONSORED',
@@ -366,18 +394,27 @@ class _ProductCardState extends State<_ProductCard> {
                                 fontWeight: FontWeight.w700,
                               ),
                             ),
-                            ),
                           ),
+                        ),
                       if (staticBadge != null)
                         Positioned(
                           top: 8,
                           right: 8,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF2F3E7A).withValues(alpha: 0.86),
-                              borderRadius: BorderRadius.circular(AppTokens.radiusPill),
-                              border: Border.all(color: const Color(0xFFBFC9F7)),
+                              color: const Color(
+                                0xFF2F3E7A,
+                              ).withValues(alpha: 0.86),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusPill,
+                              ),
+                              border: Border.all(
+                                color: const Color(0xFFBFC9F7),
+                              ),
                             ),
                             child: Text(
                               staticBadge,
@@ -404,9 +441,9 @@ class _ProductCardState extends State<_ProductCard> {
                 Text(
                   '\$${product.price.toStringAsFixed(0)}',
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF2E3A66),
-                      ),
+                    fontWeight: FontWeight.w800,
+                    color: const Color(0xFF2E3A66),
+                  ),
                 ),
                 if (!compactMode)
                   Text(
@@ -419,13 +456,17 @@ class _ProductCardState extends State<_ProductCard> {
                   children: List.generate(
                     3,
                     (star) => Icon(
-                      star < product.rating ? Icons.star_rounded : Icons.star_border_rounded,
+                      star < product.rating
+                          ? Icons.star_rounded
+                          : Icons.star_border_rounded,
                       size: 15,
                       color: const Color(0xFF6676DD),
                     ),
                   ),
                 ),
-                if (!compactMode && product.userScore != null && product.reviewCount != null)
+                if (!compactMode &&
+                    product.userScore != null &&
+                    product.reviewCount != null)
                   Text(
                     '評價 ${product.userScore}/5 (${product.reviewCount})',
                     style: Theme.of(context).textTheme.bodySmall,
@@ -436,8 +477,8 @@ class _ProductCardState extends State<_ProductCard> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontSize: compactMode ? 10.5 : null,
-                        ),
+                      fontSize: compactMode ? 10.5 : null,
+                    ),
                   ),
                 ),
                 SizedBox(height: compactMode ? 2 : 4),
@@ -458,10 +499,10 @@ class _ProductCardState extends State<_ProductCard> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFF3D4A84),
-                            fontSize: compactMode ? 11 : null,
-                          ),
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF3D4A84),
+                        fontSize: compactMode ? 11 : null,
+                      ),
                     ),
                   ),
                 ),
@@ -563,7 +604,7 @@ class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
     super.initState();
     _shineController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 850),
+      duration: AppMotion.pageEnter * 2,
       value: 1,
     );
   }
@@ -586,8 +627,9 @@ class _LuxuryBuyButtonState extends State<_LuxuryBuyButton>
 
   @override
   Widget build(BuildContext context) {
+    _shineController.duration = AppMotion.pageEnter * 2;
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 180),
+      duration: AppMotion.hover,
       height: 32,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTokens.radiusSm),

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/design_tokens.dart';
+import '../ui/motion_system.dart';
 
 class AdMarqueeBanner extends StatefulWidget {
   const AdMarqueeBanner({
@@ -33,7 +34,9 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
     _pageController = PageController(viewportFraction: 0.96);
     _startTicker();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      final firstAd = widget.adMessages.isEmpty ? '暫無廣告內容' : widget.adMessages.first;
+      final firstAd = widget.adMessages.isEmpty
+          ? '暫無廣告內容'
+          : widget.adMessages.first;
       widget.onAdImpression(firstAd);
     });
   }
@@ -65,8 +68,8 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
       if (_pageController.hasClients) {
         _pageController.animateToPage(
           _index,
-          duration: const Duration(milliseconds: 420),
-          curve: Curves.easeOutCubic,
+          duration: AppMotion.pageEnter,
+          curve: AppMotion.enterCurve,
         );
       }
     });
@@ -74,7 +77,9 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
 
   @override
   Widget build(BuildContext context) {
-    final ads = widget.adMessages.isEmpty ? const ['暫無廣告內容'] : widget.adMessages;
+    final ads = widget.adMessages.isEmpty
+        ? const ['暫無廣告內容']
+        : widget.adMessages;
     final gradientColors = widget.hasAcneConcern
         ? const [Color(0xFFFFF3F0), Color(0xFFFFE1DE)]
         : const [Color(0xFFEEE9FF), Color(0xFFE1EEFF)];
@@ -87,6 +92,7 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        border: Border.all(color: const Color(0xFFDCE3FF)),
         boxShadow: AppTokens.shadowCard,
       ),
       child: Column(
@@ -98,9 +104,9 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
               const SizedBox(width: 8),
               Text(
                 '精準推薦',
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -124,11 +130,11 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
                     borderRadius: BorderRadius.circular(14),
                     onTap: () => widget.onAdClick(ad),
                     child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.84),
-                      borderRadius: BorderRadius.circular(AppTokens.radiusMd),
-                      border: Border.all(color: const Color(0xFFD9DCF8)),
-                    ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.84),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                        border: Border.all(color: const Color(0xFFD9DCF8)),
+                      ),
                       child: Padding(
                         padding: const EdgeInsets.all(12),
                         child: Row(
@@ -138,9 +144,14 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
                               height: 40,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFEAE7FF),
-                                borderRadius: BorderRadius.circular(AppTokens.radiusMd),
+                                borderRadius: BorderRadius.circular(
+                                  AppTokens.radiusMd,
+                                ),
                               ),
-                              child: const Icon(Icons.auto_awesome_outlined, size: 20),
+                              child: const Icon(
+                                Icons.auto_awesome_outlined,
+                                size: 20,
+                              ),
                             ),
                             const SizedBox(width: 10),
                             Expanded(
@@ -166,12 +177,14 @@ class _AdMarqueeBannerState extends State<AdMarqueeBanner> {
             children: List.generate(
               ads.length.clamp(1, 5),
               (i) => AnimatedContainer(
-                duration: const Duration(milliseconds: 250),
+                duration: AppMotion.indicator,
                 margin: const EdgeInsets.symmetric(horizontal: 3),
                 height: 6,
                 width: _index == i ? 16 : 6,
                 decoration: BoxDecoration(
-                  color: _index == i ? const Color(0xFF626BDA) : const Color(0xFFBFC8EE),
+                  color: _index == i
+                      ? const Color(0xFF626BDA)
+                      : const Color(0xFFBFC8EE),
                   borderRadius: BorderRadius.circular(99),
                 ),
               ),

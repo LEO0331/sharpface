@@ -23,7 +23,17 @@ class QuickRoutineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final routine = _buildRoutine(selectedBudget, concerns);
-    return Card(
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
+        gradient: const LinearGradient(
+          colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFF)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: const Color(0xFFDCE3FF)),
+        boxShadow: AppTokens.shadowCard,
+      ),
       child: Padding(
         padding: const EdgeInsets.all(AppTokens.space3),
         child: Column(
@@ -33,13 +43,20 @@ class QuickRoutineCard extends StatelessWidget {
               children: [
                 const Icon(Icons.auto_awesome_outlined),
                 const SizedBox(width: 8),
-                Text('30 秒保養流程', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  '30 秒保養流程',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
               ],
             ),
             const SizedBox(height: AppTokens.space2),
             Text('膚質：$skinType'),
             const SizedBox(height: 6),
-            Text('AI 建議：$suggestion', maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              'AI 建議：$suggestion',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: AppTokens.space2),
             Wrap(
               spacing: 8,
@@ -62,10 +79,12 @@ class QuickRoutineCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
-            ...routine.map((e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 6),
-                  child: Text('• $e'),
-                )),
+            ...routine.map(
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Text('• $e'),
+              ),
+            ),
           ],
         ),
       ),

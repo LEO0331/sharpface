@@ -82,7 +82,9 @@ void main() {
     expect(bought?.id, 'p1');
   });
 
-  testWidgets('shows 3 review lines per card with fallback text', (tester) async {
+  testWidgets('shows 3 review lines per card with fallback text', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -107,8 +109,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.byWidgetPredicate((widget) {
-      return widget is Text && widget.data != null && widget.data!.startsWith('• ');
-    }), findsNWidgets(3));
+    expect(
+      find.byWidgetPredicate((widget) {
+        return widget is Text &&
+            widget.data != null &&
+            widget.data!.startsWith('• ');
+      }),
+      findsNWidgets(3),
+    );
   });
 }

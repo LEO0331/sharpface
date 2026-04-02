@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../core/theme/design_tokens.dart';
 import '../services/auth_service.dart';
+import '../widgets/ui/motion_system.dart';
+import '../widgets/ui/page_atmosphere.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -10,7 +13,8 @@ class AuthPage extends StatefulWidget {
   State<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin {
+class _AuthPageState extends State<AuthPage>
+    with SingleTickerProviderStateMixin {
   final _authService = AuthService();
 
   late final TabController _tabController;
@@ -97,7 +101,8 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
         case 'invalid-credential':
           return '帳號或密碼錯誤。';
         default:
-          return (isRegister ? '註冊失敗：' : '登入失敗：') + (error.message ?? error.code);
+          return (isRegister ? '註冊失敗：' : '登入失敗：') +
+              (error.message ?? error.code);
       }
     }
 
@@ -111,60 +116,127 @@ class _AuthPageState extends State<AuthPage> with SingleTickerProviderStateMixin
   @override
   Widget build(BuildContext context) {
     return SelectionArea(
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('登入 / 註冊'),
-          bottom: TabBar(
-            controller: _tabController,
-            tabs: const [Tab(text: '登入'), Tab(text: '註冊')],
+      child: MotionPresetBuilder(
+        child: Scaffold(
+          appBar: AppBar(
+            title: const Text('登入 / 註冊'),
+            actions: const [MotionPresetSwitcherButton()],
+            bottom: TabBar(
+              controller: _tabController,
+              tabs: const [
+                Tab(text: '登入'),
+                Tab(text: '註冊'),
+              ],
+            ),
           ),
-        ),
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            _AuthForm(
-              submitting: _submitting,
-              fields: [
-                TextField(
-                  controller: _loginEmailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
+          body: PageAtmosphere(
+            child: PageEnterTransition(
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: Card(
+                    margin: const EdgeInsets.all(AppTokens.space4),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppTokens.space4),
+                      child: Column(
+                        children: [
+                          StaggerReveal(
+                            index: 0,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '歡迎回來',
+                                style: Theme.of(
+                                  context,
+                                ).textTheme.headlineSmall,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          StaggerReveal(
+                            index: 1,
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                '登入或註冊後可跨裝置同步收藏與紀錄。',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppTokens.space3),
+                          StaggerReveal(
+                            index: 2,
+                            child: SizedBox(
+                              height: 360,
+                              child: TabBarView(
+                                controller: _tabController,
+                                children: [
+                                  _AuthForm(
+                                    submitting: _submitting,
+                                    fields: [
+                                      TextField(
+                                        controller: _loginEmailController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Email',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: _loginPasswordController,
+                                        obscureText: true,
+                                        decoration: const InputDecoration(
+                                          labelText: '密碼',
+                                        ),
+                                      ),
+                                    ],
+                                    buttonText: '登入',
+                                    onSubmit: _login,
+                                  ),
+                                  _AuthForm(
+                                    submitting: _submitting,
+                                    fields: [
+                                      TextField(
+                                        controller: _registerEmailController,
+                                        keyboardType:
+                                            TextInputType.emailAddress,
+                                        decoration: const InputDecoration(
+                                          labelText: 'Email',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: _registerPasswordController,
+                                        obscureText: true,
+                                        decoration: const InputDecoration(
+                                          labelText: '密碼（至少 6 碼）',
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      TextField(
+                                        controller: _registerPhoneController,
+                                        keyboardType: TextInputType.phone,
+                                        decoration: const InputDecoration(
+                                          labelText: '手機（選填）',
+                                        ),
+                                      ),
+                                    ],
+                                    buttonText: '註冊',
+                                    onSubmit: _register,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _loginPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: '密碼'),
-                ),
-              ],
-              buttonText: '登入',
-              onSubmit: _login,
+              ),
             ),
-            _AuthForm(
-              submitting: _submitting,
-              fields: [
-                TextField(
-                  controller: _registerEmailController,
-                  keyboardType: TextInputType.emailAddress,
-                  decoration: const InputDecoration(labelText: 'Email'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _registerPasswordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(labelText: '密碼（至少 6 碼）'),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: _registerPhoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: const InputDecoration(labelText: '手機（選填）'),
-                ),
-              ],
-              buttonText: '註冊',
-              onSubmit: _register,
-            ),
-          ],
+          ),
         ),
       ),
     );

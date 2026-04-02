@@ -16,12 +16,13 @@ class TopCareGuideCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTokens.radiusXl),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLg),
         gradient: const LinearGradient(
-          colors: [Color(0xFFEDE8FF), Color(0xFFE7F1FF)],
+          colors: [Color(0xFFF0EAFF), Color(0xFFE8F3FF)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
+        border: Border.all(color: const Color(0xFFDDE3FF)),
         boxShadow: AppTokens.shadowCard,
       ),
       child: Padding(
@@ -46,8 +47,8 @@ class TopCareGuideCard extends StatelessWidget {
                   Text(
                     '基礎早晚保養步驟',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: AppTokens.space2),
                   Wrap(
