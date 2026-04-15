@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:sharpface/core/cache/local_cache_service.dart';
@@ -22,11 +23,14 @@ void main() {
     expect(changed3, isTrue);
   });
 
-  test('readFreshJsonMap returns null when ttl expired metadata missing', () async {
-    await cache.saveJson('k2', {'a': 1});
-    final data = await cache.readFreshJsonMap('k2');
-    expect(data, isNull);
-  });
+  test(
+    'readFreshJsonMap returns null when ttl expired metadata missing',
+    () async {
+      await cache.saveJson('k2', {'a': 1});
+      final data = await cache.readFreshJsonMap('k2');
+      expect(data, isNull);
+    },
+  );
 
   test('readFreshJsonMap returns data within ttl window', () async {
     await cache.saveJsonWithTtl(
@@ -38,4 +42,24 @@ void main() {
     expect(data, isNotNull);
     expect(data?['a'], 1);
   });
+
+  test(
+    'saveIfChanged handles Firestore types without json encode crash',
+    () async {
+      final changed = await cache.saveIfChanged('k4', {
+        'updatedAt': FieldValue.serverTimestamp(),
+        'createdAt': Timestamp.fromDate(DateTime(2026, 4, 15)),
+        'geo': const GeoPoint(25.03, 121.56),
+        'items': [FieldValue.serverTimestamp(), 1],
+      });
+
+      expect(changed, isTrue);
+      final data = await cache.readJsonMap('k4');
+      expect(data, isNotNull);
+      expect(data?['updatedAt'], isNull);
+      expect(data?['createdAt'], isA<String>());
+      expect(data?['geo'], isA<Map<String, dynamic>>());
+      expect((data?['items'] as List).length, 2);
+    },
+  );
 }

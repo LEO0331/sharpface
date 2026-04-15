@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LocalCacheService {
@@ -7,7 +8,7 @@ class LocalCacheService {
 
   Future<void> saveJson(String key, Object value) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(value));
+    await prefs.setString(key, jsonEncode(_toJsonSafe(value)));
   }
 
   Future<void> saveJsonWithTtl({
@@ -16,7 +17,7 @@ class LocalCacheService {
     required Duration ttl,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(key, jsonEncode(value));
+    await prefs.setString(key, jsonEncode(_toJsonSafe(value)));
     await prefs.setString(
       '$key$_metaSuffix',
       jsonEncode({
@@ -58,7 +59,7 @@ class LocalCacheService {
 
   Future<bool> saveIfChanged(String key, Object value) async {
     final prefs = await SharedPreferences.getInstance();
-    final nextRaw = jsonEncode(value);
+    final nextRaw = jsonEncode(_toJsonSafe(value));
     final currentRaw = prefs.getString(key);
     if (currentRaw == nextRaw) return false;
     await prefs.setString(key, nextRaw);
@@ -84,5 +85,25 @@ class LocalCacheService {
     if (savedAt == null) return false;
     final expiresAt = savedAt.add(Duration(milliseconds: ttlMs));
     return DateTime.now().isBefore(expiresAt);
+  }
+
+  Object? _toJsonSafe(Object? value) {
+    if (value == null || value is num || value is bool || value is String) {
+      return value;
+    }
+    if (value is DateTime) return value.toIso8601String();
+    if (value is Timestamp) return value.toDate().toIso8601String();
+    if (value is FieldValue) return null;
+    if (value is GeoPoint) {
+      return {'lat': value.latitude, 'lng': value.longitude};
+    }
+    if (value is DocumentReference) return value.path;
+    if (value is Map) {
+      return value.map((k, v) => MapEntry(k.toString(), _toJsonSafe(v)));
+    }
+    if (value is Iterable) {
+      return value.map(_toJsonSafe).toList();
+    }
+    return value.toString();
   }
 }
