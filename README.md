@@ -30,6 +30,29 @@ flutter test
 flutter test --coverage
 ```
 
+### E2E（integration_test）
+```bash
+flutter test integration_test/app_e2e_test.dart
+```
+
+### E2E（Patrol）
+```bash
+# 先檢查 Patrol 環境
+dart run patrol_cli:main doctor
+
+# Android（請先啟動 emulator 或接實機）
+dart run patrol_cli:main test --target patrol_test/smoke_test.dart --device <android_device_id>
+
+# iOS（請先啟動 simulator 或接實機）
+dart run patrol_cli:main test --target patrol_test/smoke_test.dart --device <ios_device_id>
+
+# Auth flow 測試
+dart run patrol_cli:main test --target patrol_test/auth_flow_test.dart --device <device_id>
+
+# Drawer 權限顯示測試（未登入）
+dart run patrol_cli:main test --target patrol_test/access_control_test.dart --device <device_id>
+```
+
 ## 安全基線檢查（本機）
 ```bash
 bash tool/security_check.sh
