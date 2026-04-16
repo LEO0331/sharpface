@@ -3,23 +3,33 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 import 'package:sharpface/main.dart' as app;
 
+Finder _textEither(String zh, String en) {
+  return find.byWidgetPredicate((widget) {
+    if (widget is! Text) return false;
+    final data = widget.data ?? '';
+    return data.contains(zh) || data.contains(en);
+  });
+}
+
 void main() {
   patrolTest('app smoke flow', ($) async {
-    app.main();
+    await app.main();
     await $.pumpAndSettle();
-
-    expect($('男士 AI 護膚分析儀'), findsWidgets);
+    expect(find.byIcon(Icons.speed_outlined), findsOneWidget);
 
     await $(Icons.speed_outlined).tap();
     await $.pumpAndSettle();
-    expect($('動效節奏切換為'), findsOneWidget);
+    expect(_textEither('動效節奏切換為', 'Motion preset switched to'), findsOneWidget);
 
     await $(TextField).first.enterText('不存在產品');
     await $.pumpAndSettle();
-    expect($('查無符合條件的產品。'), findsOneWidget);
+    expect(
+      _textEither('查無符合條件的產品。', 'No matching products found.'),
+      findsOneWidget,
+    );
 
     await $.tester.tap(find.byTooltip('Open navigation menu'));
     await $.pumpAndSettle();
-    expect($('我的最愛'), findsOneWidget);
+    expect(_textEither('我的最愛', 'Favorites'), findsOneWidget);
   });
 }

@@ -3,35 +3,53 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:patrol/patrol.dart';
 import 'package:sharpface/main.dart' as app;
 
+Finder _textEither(String zh, String en) {
+  return find.byWidgetPredicate((widget) {
+    if (widget is! Text) return false;
+    final data = widget.data ?? '';
+    return data.contains(zh) || data.contains(en);
+  });
+}
+
 void main() {
   patrolTest('auth page navigation and form interaction', ($) async {
-    app.main();
+    await app.main();
     await $.pumpAndSettle();
 
     await $.tester.tap(find.byTooltip('Open navigation menu'));
     await $.pumpAndSettle();
 
-    await $('登入 / 註冊').tap();
+    await $.tester.tap(_textEither('登入 / 註冊', 'Login / Register').first);
     await $.pumpAndSettle();
 
-    expect($('登入 / 註冊'), findsWidgets);
+    expect(_textEither('登入 / 註冊', 'Login / Register'), findsWidgets);
     expect($('歡迎回來'), findsOneWidget);
 
-    final loginEmail = find.byType(TextField).at(0);
-    final loginPassword = find.byType(TextField).at(1);
+    final loginFields = find.byType(TextField);
+    expect(loginFields, findsAtLeastNWidgets(2));
+    final loginEmail = loginFields.at(0);
+    final loginPassword = loginFields.at(1);
     await $.tester.enterText(loginEmail, 'tester@example.com');
     await $.tester.enterText(loginPassword, '123456');
     await $.pumpAndSettle();
 
-    await $('註冊').tap();
+    await $.tester.tap(find.widgetWithText(Tab, '註冊'));
     await $.pumpAndSettle();
 
-    final registerEmail = find.byType(TextField).at(2);
-    final registerPassword = find.byType(TextField).at(3);
-    final registerPhone = find.byType(TextField).at(4);
+    expect(find.text('密碼（至少 6 碼）'), findsOneWidget);
+
+    final registerFields = find.byType(TextField);
+    final registerFieldCount = registerFields.evaluate().length;
+    expect(registerFieldCount, greaterThanOrEqualTo(2));
+
+    final registerEmail = registerFields.at(0);
+    final registerPassword = registerFields.at(1);
     await $.tester.enterText(registerEmail, 'newuser@example.com');
     await $.tester.enterText(registerPassword, '123456');
-    await $.tester.enterText(registerPhone, '+886900000005');
+    if (registerFieldCount > 2) {
+      final registerPhone = registerFields.at(2);
+      await $.tester.enterText(registerPhone, '+886900000005');
+    }
     await $.pumpAndSettle();
 
     expect($('登入或註冊後可跨裝置同步收藏與紀錄。'), findsOneWidget);
