@@ -1,5 +1,5 @@
 {
-  "last_turn_at": "2026-04-16T06:14:35.476Z",
-  "turn_count": 6,
-  "last_agent_output": "已用 Patrol 在 Chrome 跑完 E2E，結果如下：\n\n1. `patrol_test/smoke_test.dart`：Pass  \n2. `patrol_test/auth_flow_t"
+  "last_turn_at": "2026-04-24T00:42:56.706Z",
+  "turn_count": 7,
+  "last_agent_output": "### 1. Audit summary\n- 已存在：\n  - 基本 `<title>`、`meta description`、部分 OG/Twitter、`SoftwareApplication` "
 }
