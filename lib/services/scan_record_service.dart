@@ -4,7 +4,7 @@ import '../models/scan_record.dart';
 
 class ScanRecordService {
   ScanRecordService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -29,6 +29,7 @@ class ScanRecordService {
     return _firestore
         .collection('scanRecords')
         .where('userId', isEqualTo: userId)
+        .orderBy('createdAt', descending: true)
         .limit(30)
         .snapshots()
         .map((snapshot) {

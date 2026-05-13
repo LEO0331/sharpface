@@ -20,7 +20,10 @@ class AdPoolConfig {
   factory AdPoolConfig.fromDoc(String pool, Map<String, dynamic>? data) {
     final rawMessages = data?['messages'];
     final messages = rawMessages is List
-        ? rawMessages.map((e) => e.toString()).where((e) => e.trim().isNotEmpty).toList()
+        ? rawMessages
+              .map((e) => e.toString())
+              .where((e) => e.trim().isNotEmpty)
+              .toList()
         : const <String>[];
     return AdPoolConfig(
       pool: pool,
@@ -60,7 +63,7 @@ class AdPoolConfig {
 
 class AdsService {
   AdsService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
@@ -76,17 +79,17 @@ class AdsService {
   }
 
   Future<void> savePoolConfig(AdPoolConfig config) {
-    return _firestore.collection('adConfigs').doc(config.pool).set(
-          config.toMap(),
-          SetOptions(merge: true),
-        );
+    return _firestore
+        .collection('adConfigs')
+        .doc(config.pool)
+        .set(config.toMap(), SetOptions(merge: true));
   }
 
   Future<void> saveDraftConfig(AdPoolConfig config) {
-    return _firestore.collection('adConfigDrafts').doc(config.pool).set(
-          config.toMap(),
-          SetOptions(merge: true),
-        );
+    return _firestore
+        .collection('adConfigDrafts')
+        .doc(config.pool)
+        .set(config.toMap(), SetOptions(merge: true));
   }
 
   Future<AdPoolConfig> getDraftConfigOnce(String pool) async {
@@ -95,23 +98,31 @@ class AdsService {
   }
 
   Future<void> publishPoolConfig(AdPoolConfig config) async {
-    final current = await getPoolConfigOnce(config.pool);
     await _firestore.runTransaction((tx) async {
       final liveRef = _firestore.collection('adConfigs').doc(config.pool);
+      final liveSnapshot = await tx.get(liveRef);
+      final current = AdPoolConfig.fromDoc(config.pool, liveSnapshot.data());
       final historyRef = liveRef.collection('history').doc();
       tx.set(liveRef, config.toMap(), SetOptions(merge: true));
       tx.set(historyRef, {
         'messages': current.messages,
         'enabled': current.enabled,
         'priority': current.priority,
-        'startAt': current.startAt != null ? Timestamp.fromDate(current.startAt!) : null,
-        'endAt': current.endAt != null ? Timestamp.fromDate(current.endAt!) : null,
+        'startAt': current.startAt != null
+            ? Timestamp.fromDate(current.startAt!)
+            : null,
+        'endAt': current.endAt != null
+            ? Timestamp.fromDate(current.endAt!)
+            : null,
         'createdAt': FieldValue.serverTimestamp(),
       });
     });
   }
 
-  Future<List<AdPoolConfig>> getPoolHistory(String pool, {int limit = 10}) async {
+  Future<List<AdPoolConfig>> getPoolHistory(
+    String pool, {
+    int limit = 10,
+  }) async {
     final snapshot = await _firestore
         .collection('adConfigs')
         .doc(pool)
@@ -158,7 +169,7 @@ class AdsService {
   }) async {
     final normalizedMessage = message.trim();
     if (normalizedMessage.isEmpty) return;
-    final adId = '${pool}_${normalizedMessage.hashCode}';
+    final adId = _buildStableAdId(pool, normalizedMessage);
 
     await _firestore.collection('adEvents').add({
       'adId': adId,
@@ -168,5 +179,25 @@ class AdsService {
       'userId': userId,
       'createdAt': FieldValue.serverTimestamp(),
     });
+  }
+
+  String _buildStableAdId(String pool, String message) {
+    final normalizedPool = pool.trim().toLowerCase();
+    final normalizedMessage = message.trim().toLowerCase().replaceAll(
+      RegExp(r'\s+'),
+      ' ',
+    );
+    return '${normalizedPool}_${_stableHash(normalizedMessage)}';
+  }
+
+  int _stableHash(String input) {
+    var hash = 0xcbf29ce484222325;
+    const prime = 0x100000001b3;
+    const mask = 0x7fffffffffffffff;
+    for (final unit in input.codeUnits) {
+      hash ^= unit;
+      hash = (hash * prime) & mask;
+    }
+    return hash;
   }
 }

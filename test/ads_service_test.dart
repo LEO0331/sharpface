@@ -73,12 +73,12 @@ void main() {
       );
       await service.trackAdImpression(
         pool: 'general',
-        message: 'ad-x',
+        message: ' ad-x ',
         userId: 'u2',
       );
       await service.trackAdClick(
         pool: 'general',
-        message: 'ad-x',
+        message: 'AD-X',
         userId: 'u1',
       );
 
@@ -87,6 +87,8 @@ void main() {
       final types = events.docs.map((e) => e.data()['type']).toList();
       expect(types.where((t) => t == 'impression').length, 2);
       expect(types.where((t) => t == 'click').length, 1);
+      final adIds = events.docs.map((e) => e.data()['adId']).toSet();
+      expect(adIds.length, 1);
     });
 
     test('isActiveAt respects scheduling window', () {

@@ -8,8 +8,9 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
   return ProductRepository(FirebaseFirestore.instance);
 });
 
-final productProvider =
-    AsyncNotifierProvider<ProductNotifier, List<Product>>(ProductNotifier.new);
+final productProvider = AsyncNotifierProvider<ProductNotifier, List<Product>>(
+  ProductNotifier.new,
+);
 
 class ProductNotifier extends AsyncNotifier<List<Product>> {
   @override
@@ -31,6 +32,6 @@ class ProductNotifier extends AsyncNotifier<List<Product>> {
       }
       return b.rating.compareTo(a.rating);
     });
-    return products;
+    return products.take(10).toList(growable: false);
   }
 }

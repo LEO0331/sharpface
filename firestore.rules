@@ -17,6 +17,53 @@ service cloud.firestore {
         && request.resource.data.priority <= 10000;
     }
 
+    function validScanRecordDoc() {
+      return request.resource.data.keys().hasAll(
+          ['userId', 'skinType', 'suggestion', 'concerns', 'createdAt']
+        )
+        && request.resource.data.userId is string
+        && request.resource.data.skinType is string
+        && request.resource.data.suggestion is string
+        && request.resource.data.concerns is list
+        && request.resource.data.userId.size() <= 128
+        && request.resource.data.skinType.size() <= 100
+        && request.resource.data.suggestion.size() <= 2000
+        && (!request.resource.data.keys().hasAny(['contact'])
+          || request.resource.data.contact == null
+          || (request.resource.data.contact is string
+            && request.resource.data.contact.size() <= 200));
+    }
+
+    function validGuestVerificationDoc() {
+      return request.resource.data.keys().hasAll(
+          ['phoneNumber', 'verifiedAt', 'channel', 'usedForScan']
+        )
+        && request.resource.data.phoneNumber is string
+        && request.resource.data.phoneNumber.size() <= 32
+        && request.resource.data.channel is string
+        && request.resource.data.channel.size() <= 50
+        && request.resource.data.usedForScan is bool
+        && (!request.resource.data.keys().hasAny(['uid'])
+          || request.resource.data.uid == null
+          || (request.resource.data.uid is string
+            && request.resource.data.uid.size() <= 128));
+    }
+
+    function validAdEventDoc() {
+      return request.resource.data.keys().hasAll(
+          ['adId', 'pool', 'message', 'type', 'userId', 'createdAt']
+        )
+        && request.resource.data.adId is string
+        && request.resource.data.pool is string
+        && request.resource.data.message is string
+        && request.resource.data.type in ['impression', 'click']
+        && request.resource.data.userId is string
+        && request.resource.data.adId.size() <= 200
+        && request.resource.data.pool.size() <= 50
+        && request.resource.data.message.size() <= 200
+        && request.resource.data.userId.size() <= 128;
+    }
+
     match /users/{userId} {
       allow create: if isSignedIn()
         && request.auth.uid == userId
@@ -48,13 +95,13 @@ service cloud.firestore {
 
     match /scanRecords/{docId} {
       allow create: if (isSignedIn() || request.resource.data.userId == 'guest')
-        && request.resource.data.keys().hasAll(['userId', 'skinType', 'createdAt']);
+        && validScanRecordDoc();
       allow read: if isAdmin() || (isSignedIn() && resource.data.userId == request.auth.uid);
       allow update, delete: if isAdmin();
     }
 
     match /guestVerifications/{docId} {
-      allow create: if true;
+      allow create: if validGuestVerificationDoc();
       allow read, update, delete: if isAdmin();
     }
 
@@ -76,14 +123,7 @@ service cloud.firestore {
     }
 
     match /adEvents/{docId} {
-      allow create: if request.resource.data.keys().hasAll(
-        ['adId', 'pool', 'message', 'type', 'userId', 'createdAt']
-      )
-      && request.resource.data.type in ['impression', 'click']
-      && request.resource.data.pool is string
-      && request.resource.data.message is string
-      && request.resource.data.userId is string
-      && request.resource.data.message.size() <= 200;
+      allow create: if validAdEventDoc();
       allow read: if isAdmin();
       allow update, delete: if false;
     }

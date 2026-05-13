@@ -60,4 +60,31 @@ void main() {
     expect(result.first.skinType, '油性肌');
     expect(result.last.skinType, '乾性肌');
   });
+
+  test(
+    'watchUserRecords returns latest 30 records before chart ordering',
+    () async {
+      final firestore = FakeFirebaseFirestore();
+      final service = ScanRecordService(firestore: firestore);
+      final col = firestore.collection('scanRecords');
+
+      for (var index = 0; index < 35; index++) {
+        await col.add({
+          'userId': 'u1',
+          'skinType': '肌膚$index',
+          'suggestion': 's$index',
+          'concerns': ['c$index'],
+          'createdAt': Timestamp.fromDate(
+            DateTime(2026, 1, 1).add(Duration(days: index)),
+          ),
+        });
+      }
+
+      final result = await service.watchUserRecords('u1').first;
+
+      expect(result.length, 30);
+      expect(result.first.skinType, '肌膚5');
+      expect(result.last.skinType, '肌膚34');
+    },
+  );
 }
