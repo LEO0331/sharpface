@@ -191,9 +191,10 @@ class AdsService {
   }
 
   int _stableHash(String input) {
-    var hash = 0xcbf29ce484222325;
-    const prime = 0x100000001b3;
-    const mask = 0x7fffffffffffffff;
+    // Use a JS-safe 32-bit FNV-1a variant so web release builds can compile.
+    var hash = 0x811C9DC5;
+    const prime = 0x01000193;
+    const mask = 0xFFFFFFFF;
     for (final unit in input.codeUnits) {
       hash ^= unit;
       hash = (hash * prime) & mask;
