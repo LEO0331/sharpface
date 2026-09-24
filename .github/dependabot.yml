@@ -4,7 +4,10 @@ updates:
     directory: /
     schedule:
       interval: weekly
-    # Group minor and patch updates into one PR to keep noise low.
+    # Stay on the current major versions; only minor and patch updates, grouped into one PR.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
     groups:
       npm-minor-and-patch:
         update-types: [minor, patch]
@@ -13,3 +16,6 @@ updates:
     directory: /
     schedule:
       interval: monthly
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
