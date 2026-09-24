@@ -1,8 +1,8 @@
 import { questions } from "@/data/questions";
-import { categoryNames, type Category, type Question } from "@/types/question";
+import { answerStatusLabels, answerStatuses, categoryNames, type AnswerStatus, type Category, type Question } from "@/types/question";
 import { filterQuestions as filter, searchQuestions as search, slugify } from "./filters";
 
-export { questions, categoryNames };
+export { questions, categoryNames, answerStatusLabels };
 export { slugify };
 export type { QuestionFilters } from "./filters";
 
@@ -30,9 +30,14 @@ export function getQuestionStats() {
     years: getAvailableYears(),
     byCategory: Object.fromEntries(Object.keys(categoryNames).map((category) => [category, getQuestionsByCategory(category as Category).length])) as Record<Category, number>,
     byYear: Object.fromEntries(getAvailableYears().map((year) => [year, getQuestionsByYear(year).length])) as Record<number, number>,
+    byStatus: Object.fromEntries(answerStatuses.map((status) => [status, questions.filter((q) => q.answerStatus === status).length])) as Record<AnswerStatus, number>,
+    requiresFigure: questions.filter((q) => q.requiresFigure).length,
   };
 }
 export function questionLabel(q: Question): string {
-  return q.sourceKind === "past-exam" && q.year && q.questionNumber ? `${q.year} ${q.questionNumber}` : "Study Question";
+  return q.source.type === "past-exam" && q.year && q.questionNumber ? `${q.year} ${q.questionNumber}` : "Study Question";
 }
 export function getQuestion(id: string): Question | undefined { return questions.find((q) => q.id === id); }
+export function sourceLabel(q: Question): string {
+  return q.source.type === "past-exam" ? `${q.source.file}${q.source.page ? `, p. ${q.source.page}` : ""}` : q.source.note ?? "Study question";
+}

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { filterQuestions, searchQuestions } from "../src/lib/filters.ts";
-import { questions } from "../src/data/questions.ts";
+import { questions } from "../src/data/questions/index.ts";
 
 const sample = [
   { id:"a", year:2013, category:"application-layer", topic:"DNS", type:"concept", question:"How does DNS work?", tags:["lookup"], keyConcepts:["root DNS"] },
@@ -19,5 +19,5 @@ test("search question text, tags, and concepts without case sensitivity", () => 
 test("question IDs are unique and source-labeled", () => {
   assert.equal(new Set(questions.map((q) => q.id)).size, questions.length);
   assert.ok(questions.length >= 20);
-  assert.ok(questions.every((q) => q.sourceKind === "study" || (q.sourceKind === "past-exam" && q.year && q.questionNumber && q.source)));
+  assert.ok(questions.every((q) => q.source.type === "study" || (q.source.type === "past-exam" && q.year && q.questionNumber && q.source.file)));
 });

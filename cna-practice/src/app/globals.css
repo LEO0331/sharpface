@@ -64,13 +64,15 @@ h3 { font-size:1.2rem; margin:0 0 10px; }
 .question-card { display:block; padding:22px 24px; }
 .meta { display:flex; flex-wrap:wrap; gap:8px; align-items:center; color:var(--muted); font-size:.78rem; font-weight:700; }
 .meta .pill { display:inline-block; background:var(--accent-soft); color:#125b5e; padding:3px 8px; border-radius:3px; }
-.question-card h3 { font-family:Arial,sans-serif; font-size:1.05rem; line-height:1.5; font-weight:700; letter-spacing:0; margin:15px 0 0; }
+.question-card h3 { font-family:Arial,sans-serif; font-size:1.05rem; line-height:1.5; font-weight:700; letter-spacing:0; margin:15px 0 0; white-space:pre-line; }
 .question-card .open { display:block; color:var(--accent); font-weight:700; font-size:.83rem; margin-top:16px; }
 .tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:14px; }
 .tag { font-size:.74rem; color:#64777d; border:1px solid #dbe4e2; border-radius:3px; padding:2px 6px; }
 .detail-grid { display:grid; grid-template-columns:minmax(0,1fr) 230px; gap:28px; padding-bottom:50px; }
 .question-main { padding:32px; }
-.question-main .prompt { font-family:Georgia,serif; font-size:clamp(1.3rem,2.2vw,1.7rem); line-height:1.5; margin:26px 0; }
+.question-main .prompt { font-family:Georgia,serif; font-size:clamp(1.3rem,2.2vw,1.7rem); line-height:1.5; margin:26px 0; white-space:pre-line; }
+.figure-note { border:1px solid #e3d6b8; background:#fbf7ec; padding:12px 14px; font-size:.9rem; }
+.answer-status { color:var(--muted); font-size:.85rem; font-weight:700; }
 .divider { border:0; border-top:1px solid var(--line); margin:28px 0; }
 .reveal { margin-top:15px; padding:20px; border:1px solid #cfe1df; border-left:3px solid var(--accent); background:#f8fbfa; }
 .reveal h3 { font-family:Arial,sans-serif; font-size:.95rem; letter-spacing:0; }

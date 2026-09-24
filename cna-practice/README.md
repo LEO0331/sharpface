@@ -1,6 +1,6 @@
 # CNA Practice
 
-CNA Practice is an independent study app for University of Adelaide Computer Networks and Applications historical exam questions and revision notes. The starter collection contains 30 questions from the 2013–2015 Semester 1 main papers supplied with this project.
+CNA Practice is an independent study app for University of Adelaide Computer Networks and Applications historical exam questions and revision notes. The collection contains every recoverable question and sub-question from the 2013, 2014, and 2015 Semester 1 primary exam papers supplied with this project. Run `npm run stats` for current counts.
 
 The app keeps past exam wording separate from original study guidance. It is intended for study and revision; historical questions and notes may not reflect the current University of Adelaide CNA syllabus, assessment format, or official answers.
 
@@ -24,6 +24,7 @@ Open <http://localhost:3000>. Verification commands:
 npm run lint
 npm run typecheck
 npm test
+npm run stats   # dataset counts + validation (also runs before build)
 npm run build
 ```
 
@@ -39,34 +40,61 @@ npm run build
 
 ## Data structure
 
-`src/types/question.ts` defines the `Question` and `QuestionType` contracts. `src/data/questions.ts` holds the initial records. `src/lib/filters.ts` contains reusable pure search and filter functions; `src/lib/questions.ts` provides data-derived queries and counts. `src/lib/progress.ts` handles local progress state. UI components live in `src/components`.
+`src/types/question.ts` defines the `Question`, `QuestionType`, `AnswerStatus`, and `QuestionSource` contracts. Question records live in one file per exam year:
 
-Each `past-exam` record includes a year, original question reference, and source PDF/page. Key concepts, answer approaches, and full answers are original revision notes. An additional representative item without verified historical wording must use `sourceKind: 'study'`, omit any invented exam reference, and be labeled Study Question in the UI.
+```
+src/data/questions/
+  2013.ts   2014.ts   2015.ts   # questions2013 / questions2014 / questions2015
+  source.ts                     # examSource(year, page) and exam file names
+  index.ts                      # exports the combined `questions` array
+```
+
+`src/lib/validation.ts` holds the pure `validateQuestions()` checks used by the tests and by `scripts/dataset-report.mjs`. `src/lib/filters.ts` contains reusable pure search and filter functions; `src/lib/questions.ts` provides data-derived queries and counts. `src/lib/progress.ts` handles local progress state. UI components live in `src/components`.
+
+## Dataset
+
+Each exam sub-question is its own record with a deterministic ID (`2015-q2-d-i` = 2015, Question 2(d)(i)), plus `parentQuestion` and `part` linking it to its parent. Sub-question records repeat the shared stem so each page stands alone.
+
+- **Question text** is transcribed from the PDF. Only line-wrap hyphenation and layout are fixed; historical typos (e.g. “Subnect”, “occured”) are kept. Handwritten student annotations on the scans are excluded.
+- **category** is one of `application-layer`, `transport-layer`, `network-layer`, `link-layer`, `security-management`. Each topic (e.g. “Congestion Control”, “TCP Connection”) belongs to exactly one category.
+- **type** is one of `concept`, `why`, `comparison`, `calculation`, `true-false`, `scenario`, `protocol-flow`, `algorithm`.
+- **keyConcepts** (3–8 cues), **answerApproach** (3–6 guiding steps), **answer**, and optional **formulas** are revision notes written for this app, not official marking schemes.
+- **answerStatus**: `verified` — directly supported by the supplied 2017 student study notes; `draft` — written from networking principles with no historical answer available; `needs-review` — the wording, figure, or interpretation is uncertain. Items needing attention are listed in [`docs/dataset-review.md`](docs/dataset-review.md).
+- **requiresFigure** / **figureDescription** mark questions that depend on a figure in the paper and give a text transcription of it.
 
 Example record:
 
 ```ts
 {
-  id: "study-dns-cache",
-  category: "application-layer",
-  topic: "DNS",
-  type: "why",
-  question: "Study Question: Why can DNS caching reduce lookup delay?",
-  keyConcepts: ["TTL", "cache hit", "resolver"],
-  answerApproach: ["Compare local cache hits with full iterative lookups."],
-  answer: "A valid cached record can answer a repeated query without contacting the DNS hierarchy again.",
-  sourceKind: "study",
+  id: '2015-q2-d-iii', year: 2015, exam: 'Primary Examination, Semester 1',
+  questionNumber: 'Q2(d)(iii)', parentQuestion: '2015 Q2(d)', part: 'iii',
+  category: 'transport-layer', topic: 'Reliable Transport',
+  subtopics: ['Alternating Bit', 'Go-Back-N', 'Selective Repeat', 'Sequence numbers'],
+  type: 'concept', marks: 3,
+  question: 'We looked at three protocols for providing reliable transport: Alternating Bit, Go-Back-N and Selective-Repeat.
+
+Given a window size, W , what is the minimum sequence space required for each of these protocols?',
+  keyConcepts: ['Sequence number wrap-around', 'W + 1 for GBN', '2W for SR', '1 bit for Alternating Bit'],
+  answerApproach: ['Alternating Bit has a window of 1: how many numbers distinguish new from duplicate?', 'For GBN, consider a full window sent and all ACKs lost.', 'For SR, the sender and receiver windows must not overlap.'],
+  answer: 'Alternating Bit: 2 sequence numbers (0 and 1). Go-Back-N: W + 1. Selective Repeat: 2W (the window can be at most half the sequence space).',
+  formulas: ['AB: 2', 'GBN: ≥ W + 1', 'SR: ≥ 2W'],
+  source: {
+    type: 'past-exam', institution: 'University of Adelaide',
+    course: 'Computer Networks and Applications', courseCode: 'COMPSCI 3001 / 7039',
+    year: 2015, file: 'CNA-2015-s1-MAIN.pdf', page: 4,
+  },
+  answerStatus: 'draft',
 }
 ```
 
+In the year files, `source` is written as `examSource(2015, 4)`.
+
 ## Add a question or year
 
-1. Open the source document and verify exact wording, marks, year, and question reference. Record the PDF filename and page in `source`.
-2. Add a unique, readable `id` and a typed object to `src/data/questions.ts`. Add the year only when the source supports it.
-3. Write separate `keyConcepts`, `answerApproach`, and `answer` fields. Label unverified or newly written wording as `study`.
-4. Run lint, typecheck, tests, and build. Years, topics, category counts, routes, and filters update from data automatically.
-
-The recommended next import step is to create a small extraction and review sheet for every 2013–2015 exam item, including page, question reference, marks, exact wording, answer confidence, and a second-person source check. Then add the reviewed records to `src/data/questions.ts` in batches.
+1. Open the source PDF and verify exact wording, marks, year, question reference, and page.
+2. Add one record per sub-question to the year file (`src/data/questions/<year>.ts`, created from an existing one and added to `index.ts`). Use `examSource(year, page)`, and add the file name to `examFiles` in `source.ts`.
+3. Write separate `keyConcepts`, `answerApproach`, and `answer` fields. Set `answerStatus` honestly, and add a `docs/dataset-review.md` entry for anything uncertain.
+4. Run `npm run stats`, lint, typecheck, tests, and build. Years, topics, category counts, routes, and filters update from data automatically. (To add years outside 2013–2015, update `examYears` in `src/lib/validation.ts`.)
 
 ## Future roadmap
 
