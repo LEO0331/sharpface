@@ -62,9 +62,9 @@ export const questions2013: Question[] = [
     question: 'Under what conditions will distributing a file by a client-server architecture be faster than distributing the file by a peer to peer architecture.',
     keyConcepts: ['D_cs = max(NF/u_s, F/d_min)', 'D_p2p lower bound', 'Peer upload capacity', 'Number of peers'],
     answerApproach: ['Write both distribution-time formulas side by side.', 'Compare each term of the P2P bound with the client-server bound.', 'Consider whether the models assume ideal peers, and what real-world factors they ignore.'],
-    answer: 'NEEDS REVIEW — the expected exam answer is uncertain. From the standard lower-bound formulas, P2P (with the server participating) is never slower than client-server: F/u_s ≤ NF/u_s and NF/(u_s + Σu_i) ≤ NF/u_s, so D_p2p ≤ D_cs; they are equal when N = 1 or peers contribute no upload capacity. Client-server can be faster in practice only when the model’s assumptions fail, e.g. peers have little or no usable upload bandwidth (asymmetric links, NAT), peers leave early, or the overhead of peer discovery and coordination outweighs the gain for a small number of clients. The annotated source notes “no condition, based on the formula, p2p always quicker than c-s”.',
+    answer: 'Using the textbook (K&R) distribution-time formulas: in the ideal model client-server is never faster. F/us ≤ NF/us and NF/(us + Σui) ≤ NF/us, so D_p2p ≤ D_cs; the two are equal only when N = 1, when peers contribute no upload capacity (Σui = 0), or when the slowest download F/dmin dominates both. So client-server can only be faster under conditions the model ignores: very few clients (so P2P peer discovery and coordination overhead outweighs the gain), peers with little or no usable upload capacity (asymmetric access links, NAT, free-riding), or peers leaving before they have uploaded (churn).',
     formulas: ['D_cs ≥ max(NF/u_s, F/d_min)', 'D_p2p ≥ max(F/u_s, F/d_min, NF/(u_s + Σu_i))'],
-    tags: ['file distribution', 'scalability'], source: examSource(2013, 2), answerStatus: 'needs-review',
+    tags: ['file distribution', 'scalability'], source: examSource(2013, 2), answerStatus: 'draft',
   },
 
   // Question 2 — Transport Layer (24 marks)
@@ -152,11 +152,11 @@ export const questions2013: Question[] = [
     question: 'Figure 1 is a diagrammatical depiction of a network of routers with link costs. Copy the table given in the figure and complete the distance table using the Distance Vector routing algorithm executed at node B. Assume that routing loops are prevented. Finally indicate in a table the resulting routing table.',
     keyConcepts: ['Bellman-Ford equation', 'Distance table D^B(dest, via)', 'Neighbour distance vectors', 'Loop prevention', 'Routing table'],
     answerApproach: ['List B’s neighbours and the direct link costs to each.', 'For each neighbour, find its least-cost distance to every destination without routing back through B.', 'Fill each cell as c(B, neighbour) + neighbour’s distance to the destination.', 'For each destination row, pick the minimum to build the routing table.'],
-    answer: 'NEEDS REVIEW — the graph below was transcribed from Figure 1, and the intermediate cells depend on how “routing loops are prevented” is interpreted. Links: A–B 6, A–E 2, B–C 1, B–E 3, C–D 2, D–E 3. Treating neighbour distances as paths that avoid B (poisoned reverse): D^B(A) via A = 6, via E = 3 + 2 = 5, via C = 1 + 7 = 8. D^B(E) via A = 6 + 2 = 8, via E = 3, via C = 1 + 5 = 6. D^B(D) via A = 6 + 5 = 11, via E = 3 + 3 = 6, via C = 1 + 2 = 3. D^B(C) via A = 6 + 7 = 13, via E = 3 + 5 = 8, via C = 1. Routing table at B: A → next hop E, cost 5; E → E, cost 3; D → C, cost 3; C → C, cost 1. The routing table is the same under either interpretation.',
+    answer: 'Assumption (the usual classroom reading of “routing loops are prevented”): each cell D^B(dest, via v) = c(B, v) + the neighbour’s least cost to dest along a path that does not return through B. Links (Figure 1): A–B 6, A–E 2, B–C 1, B–E 3, C–D 2, D–E 3. D^B(A): via A = 6, via E = 3 + 2 = 5, via C = 1 + 7 = 8. D^B(E): via A = 6 + 2 = 8, via E = 3, via C = 1 + 5 = 6. D^B(D): via A = 6 + 5 = 11, via E = 3 + 3 = 6, via C = 1 + 2 = 3. D^B(C): via A = 6 + 7 = 13, via E = 3 + 5 = 8, via C = 1. Routing table at B (minimum of each row): A → next hop E, cost 5; E → E, cost 3; D → C, cost 3; C → C, cost 1.',
     formulas: ['D_B(y) = min over neighbours v { c(B, v) + D_v(y) }'],
     tags: ['Bellman-Ford', 'routing table'], source: examSource(2013, 4),
     requiresFigure: true, figureDescription: 'Figure 1 (Distance Vector Routing): routers A, B, C, D, E with link costs A–B 6, A–E 2, B–C 1, B–E 3, C–D 2, E–D 3, and an empty distance table D^B() with columns “via” A, E, C and destination rows A, E, D, C.',
-    answerStatus: 'needs-review',
+    answerStatus: 'draft',
   },
   {
     id: '2013-q3-c', year: 2013, exam, questionNumber: 'Q3(c)', parentQuestion: '2013 Q3',

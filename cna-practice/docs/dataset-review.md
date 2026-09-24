@@ -1,6 +1,6 @@
 # Dataset review
 
-Items in the 2013–2015 dataset that need a human check. This covers every record with `answerStatus: 'needs-review'`, every figure-dependent question, and every transcription or answer decision that could reasonably be disputed.
+Items in the 2013–2015 dataset that need a human check. This covers every figure-dependent question and every transcription or answer decision that could reasonably be disputed. No record is currently `needs-review`: where the intended answer was uncertain, the answer follows the textbook (Kurose & Ross) or a stated common assumption, and the record is `draft`.
 
 Sources: the three exam PDFs (`CNA-2013-S1-Main.pdf`, `CNA-2014-s1 (4) (1).pdf`, `CNA-2015-s1-MAIN.pdf`) and the 2017 student answer notes. The notes are unofficial. `verified` means "directly supported by those notes", not "matches an official marking scheme".
 
@@ -22,11 +22,11 @@ Dataset status: the meaning is preserved. Check the rendering if math notation s
 
 ### 2013 Q1(f)
 Reason: the question asks when client-server is faster than P2P. By the standard lower-bound formulas it never is. The student note says "no condition, based on the formula, p2p always quicker than c-s". The intended exam answer (formula-based "never", or practical conditions) is unknown.
-Dataset status: `needs-review`. The answer gives both views.
+Dataset status: `draft`. Resolved with the textbook formula view: in the ideal model client-server is never faster (equal only when N = 1 or peers upload nothing). The answer then lists the practical conditions the model ignores.
 
 ### 2013 Q3(b)
 Reason: the question depends on Figure 1. Link costs were transcribed from the image: A–B 6, A–E 2, B–C 1, B–E 3, C–D 2, E–D 3. "Assume that routing loops are prevented" can be read in more than one way, which changes some intermediate cells. The answer uses neighbour distances that avoid B (poisoned reverse). The final routing table is the same under either reading.
-Dataset status: `needs-review`, `requiresFigure: true`. Check the edge costs against the original figure, and confirm which cell values are expected.
+Dataset status: `draft`, `requiresFigure: true`. Edge costs were re-checked against the rendered figure and match. The loop-avoiding reading is stated as an assumption in the answer.
 
 ### 2013 Q4(b)
 Reason: the true/false verdict depends on reading "error-free" as perfect or as effectively reliable.
@@ -52,7 +52,7 @@ Dataset status: `verified` (matched by the notes). The wording is kept as printe
 
 ### 2014 Q3(d)(i)
 Reason: no prefix length is given. The answer assumes classful addressing: 10.0.0.0/8, so 1 network. A different assumption changes the answer.
-Dataset status: `needs-review`.
+Dataset status: `draft`. The classful assumption is stated in the answer.
 
 ### 2014 Q3(e)
 Reason: the question states a 20-byte IP header only. Counting a 20-byte TCP header as well changes the answer from 3379 to 3425 datagrams.
@@ -73,8 +73,8 @@ Reason: the question depends on the Figure 1 network and on the printed tables. 
 Dataset status: `draft`, `requiresFigure: true`. For (ii), the answer also mentions the poisoned-reverse variant.
 
 ### 2015 Q4(a)
-Reason: the answer (8 interfaces, 3 forwarding tables, as in the textbook) conflicts with the student annotation "n forwarding table and 2n interface".
-Dataset status: `draft`. Confirm which count the course expected.
+Reason: the student annotation reads "n forwarding table and 2n interface", which counts router interfaces only.
+Dataset status: `draft`. Uses the textbook answer: 8 interfaces (2n + 2, including both hosts) and 3 forwarding tables.
 
 ### 2015 Q5(a)
 Reason: the page includes Figure 2 (ALOHA efficiency plot: slotted peaks ≈ 0.37 at G = 1, pure ≈ 0.18 at G = 0.5). The question can be answered without it.
@@ -82,14 +82,14 @@ Dataset status: `draft`, `requiresFigure` not set.
 
 ### 2015 Q5(b)
 Reason: 1 Mbps host rates on a 2 Mbps channel make the intended TDMA/FDMA/ALOHA figures ambiguous. The question also ends with a stray "pure ALOHA),", kept as printed.
-Dataset status: `needs-review`. The answer gives one stated interpretation.
+Dataset status: `draft`. The answer is a direction: it assumes an average demand of 0.2 Mbps per host and p = 0.2 for ALOHA, and quotes the textbook maximum efficiencies (1/e, 1/(2e)).
 
 ### 2015 Q5(c)
 Reason: the efficiency formula is printed as "efficiency = 1/1 + 5tprop/ttrans" (a typesetting error). The intended formula is 1/(1 + 5·tprop/ttrans), given in `formulas`.
 Dataset status: `draft`. The question text is kept as printed.
 
 ### 2015 Q5(d)
-Reason: the question depends on Figure 3 (MPLS tables), transcribed into `figureDescription`. R5's and R6's interface numbers towards R4 are not labelled, so the answer uses "link to R4". The label values chosen (10 and 8) are one valid option.
+Reason: the question depends on Figure 3 (MPLS tables), transcribed into `figureDescription`. R5's and R6's interface numbers towards R4 are not labelled. Each has a single link to R4, so the answer assumes interface 0. The label values chosen (10 and 8) are one valid option.
 Dataset status: `draft`, `requiresFigure: true`.
 
 ### 2015 Q5(f)

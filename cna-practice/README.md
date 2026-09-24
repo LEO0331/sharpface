@@ -59,7 +59,7 @@ Each exam sub-question is its own record with a deterministic ID (`2015-q2-d-i` 
 - **category** is one of `application-layer`, `transport-layer`, `network-layer`, `link-layer`, `security-management`. Each topic (e.g. “Congestion Control”, “TCP Connection”) belongs to exactly one category.
 - **type** is one of `concept`, `why`, `comparison`, `calculation`, `true-false`, `scenario`, `protocol-flow`, `algorithm`.
 - **keyConcepts** (3–8 cues), **answerApproach** (3–6 guiding steps), **answer**, and optional **formulas** are revision notes written for this app, not official marking schemes.
-- **answerStatus**: `verified` — directly supported by the supplied 2017 student study notes; `draft` — written from networking principles with no historical answer available; `needs-review` — the wording, figure, or interpretation is uncertain. Items needing attention are listed in [`docs/dataset-review.md`](docs/dataset-review.md).
+- **answerStatus**: `verified` — directly supported by the supplied 2017 student study notes; `draft` — written from networking principles and the textbook (Kurose & Ross) with no historical answer available, stating any assumption made where the question is ambiguous; `needs-review` — the wording, figure, or interpretation is uncertain. Items needing attention are listed in [`docs/dataset-review.md`](docs/dataset-review.md).
 - **requiresFigure** / **figureDescription** mark questions that depend on a figure in the paper and give a text transcription of it.
 
 Example record:

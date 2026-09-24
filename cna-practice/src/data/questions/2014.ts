@@ -182,8 +182,8 @@ export const questions2014: Question[] = [
     question: `${q3dStem}\n\n10.5.5.1\n10.5.6.2\n10.7.8.3`,
     keyConcepts: ['No prefix length given', 'Classful default mask', 'Class A /8', 'Network number'],
     answerApproach: ['Notice that no prefix length is supplied.', 'Decide which default mask applies, and state the assumption.', 'Apply that mask to each address and compare the results.'],
-    answer: 'NEEDS REVIEW — no prefix is given, so the answer depends on the assumption. Using the classful default: 10.x.x.x is a Class A address with an 8-bit network part (/8), so all three addresses are in 1 network, 10.0.0.0. The reason is that all three share the first octet 10.',
-    tags: ['CIDR', 'classful', 'network number'], source: examSource(2014, 5), answerStatus: 'needs-review',
+    answer: 'No prefix is given, so use the common (classful) assumption: 10.x.x.x is a Class A address with an 8-bit network part (/8, mask 255.0.0.0). All three addresses share the first octet 10, so they are in 1 network: 10.0.0.0.',
+    tags: ['CIDR', 'classful', 'network number'], source: examSource(2014, 5), answerStatus: 'draft',
   },
   {
     id: '2014-q3-d-ii', year: 2014, exam, questionNumber: 'Q3(d)(ii)', parentQuestion: '2014 Q3(d)', part: 'ii',
