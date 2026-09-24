@@ -2,9 +2,16 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import "./globals.css";
 
+const title = "CNA Practice — Computer Networks Past Questions";
+const description = "Structured University of Adelaide Computer Networks and Applications past exam questions, revision notes, and guided answer approaches.";
+
 export const metadata: Metadata = {
-  title: { default: "CNA Practice — Computer Networks Past Questions", template: "%s | CNA Practice" },
-  description: "Structured University of Adelaide Computer Networks and Applications past exam questions, revision notes, and guided answer approaches.",
+  // SITE_URL is set by the deploy workflow, e.g. https://leo0331.github.io/sharpface
+  metadataBase: new URL(process.env.SITE_URL || "http://localhost:3000"),
+  title: { default: title, template: "%s | CNA Practice" },
+  description,
+  openGraph: { type: "website", siteName: "CNA Practice", title, description, url: "/" },
+  twitter: { card: "summary", title, description },
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

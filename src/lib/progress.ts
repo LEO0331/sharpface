@@ -14,3 +14,16 @@ export function readProgress(): Progress {
 export function saveProgress(value: Progress): void {
   if (typeof window !== "undefined") localStorage.setItem(key, JSON.stringify(value));
 }
+export function clearProgress(): void {
+  if (typeof window !== "undefined") localStorage.removeItem(key);
+}
+// Counts only IDs that still exist, so removed or renamed questions are ignored.
+export function progressSummary(progress: Progress, ids: string[]): { reviewed: number; bookmarked: number; total: number; lastViewed?: string } {
+  const known = new Set(ids);
+  return {
+    reviewed: new Set(progress.reviewed.filter((id) => known.has(id))).size,
+    bookmarked: new Set(progress.bookmarked.filter((id) => known.has(id))).size,
+    total: ids.length,
+    lastViewed: progress.lastViewed && known.has(progress.lastViewed) ? progress.lastViewed : undefined,
+  };
+}

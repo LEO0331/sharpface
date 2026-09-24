@@ -45,6 +45,8 @@ jobs:
         env:
           # e.g. "/sharpface" for a project site
           PAGES_BASE_PATH: ${{ steps.pages.outputs.base_path }}
+          # absolute site URL for share previews, e.g. https://leo0331.github.io/sharpface
+          SITE_URL: ${{ steps.pages.outputs.base_url }}
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

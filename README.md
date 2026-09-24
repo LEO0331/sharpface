@@ -35,10 +35,10 @@ The site is a static export (`out/`) published to GitHub Pages. Every push to `m
 
 ## Pages
 
-- `/` — collection overview and category links
+- `/` — collection overview, category links, and local study progress (continue where you left off, reviewed count, reset)
 - `/questions` — searchable library with shareable year, category, topic, type, answer-status, and my-progress (bookmarked / reviewed / not reviewed) filters
 - `/questions/[id]` — question and separate Key Concepts, Answer Approach, and Full Answer reveals, previous/next navigation, and links to the other parts of the same exam question
-- `/practice` — configurable one-question-at-a-time practice with local progress
+- `/practice` — configurable one-question-at-a-time practice with local progress and a reset button
 - `/topics` and `/topics/[slug]` — data-derived topic counts and listings
 - `/categories/[slug]` — data-derived category listings
 - `/about` — source labeling and disclaimer

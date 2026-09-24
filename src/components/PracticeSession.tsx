@@ -6,6 +6,7 @@ import { categoryNames, filterQuestions, getAvailableYears, getTopics, questionL
 import { readProgress } from "@/lib/progress";
 import type { Category } from "@/types/question";
 import { QuestionPractice } from "./QuestionPractice";
+import { ResetProgressButton } from "./ResetProgressButton";
 
 export function PracticeSession() {
   const [year, setYear] = useState("");
@@ -35,5 +36,6 @@ export function PracticeSession() {
     </div><p><strong>{available.length}</strong> questions available with these settings.</p>
     <button className="button" disabled={!available.length} onClick={start}>Start practice →</button>
     {lastViewed && <p style={{fontSize:".85rem",marginTop:22}}>Last viewed: <Link className="text-link" href={`/questions/${lastViewed}`}>return to question</Link></p>}
+    <div className="actions"><ResetProgressButton onReset={() => setLastViewed(undefined)} /></div>
   </div>;
 }

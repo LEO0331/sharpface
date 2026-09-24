@@ -6,7 +6,10 @@ import { QuestionPractice } from "@/components/QuestionPractice";
 export function generateStaticParams() { return questions.map((q) => ({ id:q.id })); }
 export async function generateMetadata({ params }: { params: Promise<{ id:string }> }) {
   const q = getQuestion((await params).id);
-  return { title: q ? `${questionLabel(q)} — ${q.topic}` : "Question" };
+  if (!q) return { title: "Question" };
+  const title = `${questionLabel(q)} — ${q.topic}`;
+  const description = `${categoryNames[q.category]} past exam question on ${q.topic}, with key concepts, an answer approach, and a revision answer.`;
+  return { title, description, openGraph: { type: "article", siteName: "CNA Practice", title, description, url: `/questions/${q.id}/` } };
 }
 export default async function QuestionPage({ params }: { params: Promise<{ id:string }> }) {
   const q = getQuestion((await params).id);

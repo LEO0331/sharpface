@@ -88,6 +88,13 @@ h3 { font-size:1.2rem; margin:0 0 10px; }
 .part-list li { margin:5px 0; }
 .part-list .current { font-weight:800; color:var(--ink); }
 .part-topic { font-size:.8rem; }
+.study-progress { margin-top:36px; padding:22px 24px; }
+.study-progress-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; flex-wrap:wrap; }
+.study-progress-head h2 { margin:0; font-size:1.2rem; }
+.study-progress-head span { color:var(--muted); font-size:.8rem; }
+.study-progress .actions { margin-top:14px; }
+.progress-bar { height:8px; margin:16px 0 10px; border-radius:4px; background:var(--accent-soft); overflow:hidden; }
+.progress-bar span { display:block; height:100%; background:var(--accent); }
 .question-nav { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:22px 0 50px; }
 .topic-groups { display:grid; gap:18px; padding-bottom:50px; }
 .topic-group { padding:25px; }
