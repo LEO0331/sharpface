@@ -31,7 +31,7 @@ npm run build
 
 ## Deployment
 
-The site is a static export (`out/`) published to GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`. The workflow runs lint, typecheck and tests, then builds with `PAGES_BASE_PATH=/<repo name>` and deploys `out/` with GitHub's Pages actions. In the repository's **Settings → Pages**, set **Source** to **GitHub Actions**. Live site: <https://leo0331.github.io/sharpface/>.
+The site is a static export (`out/`) published to GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`. The workflow runs lint, typecheck and tests, then builds with `PAGES_BASE_PATH=/<repo name>` and deploys `out/` with GitHub's Pages actions. In the repository's **Settings → Pages**, set **Source** to **GitHub Actions**. Pull requests are checked by `.github/workflows/ci.yml` (lint, typecheck, tests, build), and Dependabot (`.github/dependabot.yml`) opens weekly npm and monthly GitHub Actions update PRs. The build also writes `sitemap.xml` from the data. Submit it in Google Search Console, since a project site cannot serve a root `robots.txt`. Live site: <https://leo0331.github.io/sharpface/>.
 
 ## Pages
 
@@ -42,6 +42,8 @@ The site is a static export (`out/`) published to GitHub Pages. Every push to `m
 - `/topics` and `/topics/[slug]` — data-derived topic counts and listings
 - `/categories/[slug]` — data-derived category listings
 - `/about` — source labeling and disclaimer
+
+On question and practice pages, keyboard shortcuts toggle guidance (K concepts, A approach, F answer), mark progress (R reviewed, B bookmark), and move between questions (← / → or P / N). Printing a question page (Ctrl/Cmd + P) hides navigation and includes all guidance sections.
 
 ## Data structure
 

@@ -111,3 +111,16 @@ h3 { font-size:1.2rem; margin:0 0 10px; }
 @media(max-width:800px) { .header-inner{align-items:flex-start; flex-direction:column; padding:16px 0; gap:8px} .nav{margin-left:-10px} .hero-grid,.browser-layout,.detail-grid{grid-template-columns:1fr} .hero-note{max-width:400px} .filters{position:static} .category-grid,.topic-links{grid-template-columns:repeat(2,1fr)} }
 @media(max-width:560px) { .container{width:min(100% - 28px,1120px)} .hero{padding:48px 0} .page-intro{padding:38px 0 22px} .category-grid,.topic-links,.practice-config-grid{grid-template-columns:1fr} .question-main,.prose{padding:22px} .nav a{font-size:.82rem; padding:7px 8px} .section{padding:38px 0} }
 @media(prefers-color-scheme:dark) { :root{color-scheme:dark;--ink:#e5eded;--muted:#adbec2;--line:#375057;--paper:#17282e;--white:#20353c;--accent:#8bd4cf;--accent-soft:#29474c} body,.hero,.site-header,.category-card,.panel,.question-card,.prose{background:var(--paper)} .hero,.site-header,.category-card,.panel,.question-card,.prose{border-color:var(--line)} .lead,.prose p,.nav a,.field span{color:#c3d1d3} .field input,.field select{background:#20353c;color:var(--ink);border-color:#52686e} .button.secondary{background:#20353c;color:var(--accent)} .button.ghost{color:var(--ink)} .reveal{background:#20383d;border-color:#45666a} .formula{background:#28444a} .meta .pill{color:#a3e5df} .tag{color:#bdcacc;border-color:#4e666b} }
+.shortcut-hint { margin:14px 0 0; color:var(--muted); font-size:.76rem; }
+@media(hover:none) { .shortcut-hint { display:none; } }
+/* Print: question, figure note, and every guidance section; no navigation or controls. */
+@media print {
+  :root { color-scheme:light; --ink:#000; --muted:#333; --line:#bbb; --paper:#fff; --white:#fff; --accent:#000; --accent-soft:#eee; }
+  body, .panel, .question-card, .prose, .reveal { background:#fff !important; color:#000; box-shadow:none; }
+  .site-header, .site-footer, .actions, .question-nav, .shortcut-hint, .divider, .page-intro .text-link, .filters, .study-progress, .part-list, .sidebar dl + strong { display:none !important; }
+  .reveal[hidden] { display:block !important; }
+  .detail-grid { display:block; }
+  .sidebar { margin-top:16px; }
+  .reveal, .question-card { break-inside:avoid; border-color:#bbb; }
+  a { color:#000; }
+}

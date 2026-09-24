@@ -7,6 +7,7 @@ import { readProgress } from "@/lib/progress";
 import type { Category } from "@/types/question";
 import { QuestionPractice } from "./QuestionPractice";
 import { ResetProgressButton } from "./ResetProgressButton";
+import { useShortcuts } from "./useShortcuts";
 
 export function PracticeSession() {
   const [year, setYear] = useState("");
@@ -22,6 +23,13 @@ export function PracticeSession() {
   const current = session[index];
   function start() { setSessionIds(available.slice(0, Math.min(Number(count), available.length)).map((q) => q.id)); setIndex(0); }
   function reset() { setSessionIds([]); setIndex(0); }
+  useShortcuts((shortcut) => {
+    if (!current) return false;
+    if (shortcut === "previous" && index > 0) setIndex(index - 1);
+    else if (shortcut === "next" && index < session.length - 1) setIndex(index + 1);
+    else return false;
+    return true;
+  });
   if (sessionIds.length && current) return <div>
     <div className="practice-top"><strong>Question {index + 1} / {session.length}</strong><button className="button ghost" onClick={reset}>Change session</button></div>
     <article className="panel question-main"><div className="meta"><span className="pill">{questionLabel(current)}</span><span>{categoryNames[current.category]}</span><span>· {current.topic}</span>{current.marks && <span>· {current.marks} marks</span>}</div><p className="prompt">{current.question}</p><QuestionPractice question={current} /></article>
