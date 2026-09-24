@@ -1,5 +1,7 @@
 # CNA Practice
 
+Live site: <https://leo0331.github.io/sharpface/>
+
 CNA Practice is an independent study app for University of Adelaide Computer Networks and Applications historical exam questions and revision notes. The collection contains every recoverable question and sub-question from the 2013, 2014, and 2015 Semester 1 primary exam papers supplied with this project. Run `npm run stats` for current counts.
 
 The app keeps past exam wording separate from original study guidance. It is intended for study and revision; historical questions and notes may not reflect the current University of Adelaide CNA syllabus, assessment format, or official answers.
