@@ -29,7 +29,7 @@ npm run build
 
 ## Deployment
 
-The site is a static export (`out/`) published to GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`. The workflow runs lint, typecheck and tests, then builds with `PAGES_BASE_PATH=/<repo name>` and publishes `out/` to the `gh-pages` branch. Live site: <https://leo0331.github.io/sharpface/>.
+The site is a static export (`out/`) published to GitHub Pages. Every push to `main` runs `.github/workflows/deploy.yml`. The workflow runs lint, typecheck and tests, then builds with `PAGES_BASE_PATH=/<repo name>` and deploys `out/` with GitHub's Pages actions. In the repository's **Settings → Pages**, set **Source** to **GitHub Actions**. Live site: <https://leo0331.github.io/sharpface/>.
 
 ## Pages
 
