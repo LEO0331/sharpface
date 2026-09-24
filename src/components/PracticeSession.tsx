@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { categoryNames, filterQuestions, getAvailableYears, getTopics, questionLabel, slugify } from "@/lib/questions";
 import { readProgress } from "@/lib/progress";
@@ -33,6 +34,6 @@ export function PracticeSession() {
       <label className="field"><span>Number of questions</span><select value={count} onChange={(e) => setCount(e.target.value)}>{[5,10,15,20,30].map((value) => <option value={value} key={value}>{value}</option>)}</select></label>
     </div><p><strong>{available.length}</strong> questions available with these settings.</p>
     <button className="button" disabled={!available.length} onClick={start}>Start practice →</button>
-    {lastViewed && <p style={{fontSize:".85rem",marginTop:22}}>Last viewed: <a className="text-link" href={`/questions/${lastViewed}`}>return to question</a></p>}
+    {lastViewed && <p style={{fontSize:".85rem",marginTop:22}}>Last viewed: <Link className="text-link" href={`/questions/${lastViewed}`}>return to question</Link></p>}
   </div>;
 }

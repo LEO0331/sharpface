@@ -1,10 +1,11 @@
 import { questions } from "@/data/questions";
 import { answerStatusLabels, answerStatuses, categoryNames, type AnswerStatus, type Category, type Question } from "@/types/question";
-import { filterQuestions as filter, searchQuestions as search, slugify } from "./filters";
+import { adjacentQuestions, filterQuestions as filter, searchQuestions as search, siblingQuestions, slugify } from "./filters";
 
-export { questions, categoryNames, answerStatusLabels };
+export { questions, categoryNames, answerStatusLabels, answerStatuses };
 export { slugify };
-export type { QuestionFilters } from "./filters";
+export { filterByProgress, progressFilters } from "./filters";
+export type { ProgressFilter, QuestionFilters } from "./filters";
 
 export function getQuestionsByYear(year: number): Question[] { return questions.filter((q) => q.year === year); }
 export function getQuestionsByCategory(category: Category): Question[] { return questions.filter((q) => q.category === category); }
@@ -38,6 +39,8 @@ export function questionLabel(q: Question): string {
   return q.source.type === "past-exam" && q.year && q.questionNumber ? `${q.year} ${q.questionNumber}` : "Study Question";
 }
 export function getQuestion(id: string): Question | undefined { return questions.find((q) => q.id === id); }
+export function getAdjacentQuestions(id: string) { return adjacentQuestions(id, questions); }
+export function getSiblingQuestions(q: Question): Question[] { return siblingQuestions(q, questions); }
 export function sourceLabel(q: Question): string {
   return q.source.type === "past-exam" ? `${q.source.file}${q.source.page ? `, p. ${q.source.page}` : ""}` : q.source.note ?? "Study question";
 }

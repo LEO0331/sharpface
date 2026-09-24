@@ -83,6 +83,12 @@ h3 { font-size:1.2rem; margin:0 0 10px; }
 .sidebar strong { color:var(--ink); }
 .sidebar dt { font-size:.75rem; text-transform:uppercase; letter-spacing:.08em; margin-top:14px; }
 .sidebar dd { margin:2px 0 0; color:var(--ink); }
+.sidebar dl + strong { display:block; margin-top:22px; padding-top:16px; border-top:1px solid var(--line); }
+.part-list { list-style:none; margin:8px 0 0; padding:0; }
+.part-list li { margin:5px 0; }
+.part-list .current { font-weight:800; color:var(--ink); }
+.part-topic { font-size:.8rem; }
+.question-nav { display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin:22px 0 50px; }
 .topic-groups { display:grid; gap:18px; padding-bottom:50px; }
 .topic-group { padding:25px; }
 .topic-links { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px 22px; }
